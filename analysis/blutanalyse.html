@@ -1,0 +1,1498 @@
+<title>Bechterew Blood Compass — Blutanalyse</title>
+<style>
+  @font-face {
+    font-family: 'Display';
+    src: local('Georgia');
+    font-display: swap;
+  }
+
+  :root {
+    --surface: #F6F4EF;
+    --surface-card: #FFFFFF;
+    --accent: #2B7A6B;
+    --accent-wash: #E5F0ED;
+    --accent-dark: #1E5A4E;
+    --good: #3D7A4F;
+    --watch: #B07D2A;
+    --alert: #B34E4A;
+    --ink: #2A2722;
+    --ink-2: #6B6560;
+    --ink-3: #9E998F;
+    --border: #DDD9D0;
+    --border-light: #ECEAE3;
+    --tag-good-bg: #E8F5EC;
+    --tag-watch-bg: #FDF3E0;
+    --tag-alert-bg: #FCEAEA;
+    --sparkline-fill: rgba(43,122,107,0.08);
+    --row-alt: rgba(43,122,107,0.025);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #141311;
+      --surface-card: #1E1D1A;
+      --accent: #4AA695;
+      --accent-wash: #1A3330;
+      --accent-dark: #73C4B4;
+      --good: #5AAE6F;
+      --watch: #D4A23C;
+      --alert: #D06560;
+      --ink: #E8E4DB;
+      --ink-2: #A09B91;
+      --ink-3: #6B665E;
+      --border: #2E2D28;
+      --border-light: #242320;
+      --tag-good-bg: #1A2E1F;
+      --tag-watch-bg: #2A2210;
+      --tag-alert-bg: #2E1A1A;
+      --sparkline-fill: rgba(74,166,149,0.1);
+      --row-alt: rgba(74,166,149,0.03);
+    }
+  }
+  :root[data-theme="dark"] {
+    --surface: #141311;
+    --surface-card: #1E1D1A;
+    --accent: #4AA695;
+    --accent-wash: #1A3330;
+    --accent-dark: #73C4B4;
+    --good: #5AAE6F;
+    --watch: #D4A23C;
+    --alert: #D06560;
+    --ink: #E8E4DB;
+    --ink-2: #A09B91;
+    --ink-3: #6B665E;
+    --border: #2E2D28;
+    --border-light: #242320;
+    --tag-good-bg: #1A2E1F;
+    --tag-watch-bg: #2A2210;
+    --tag-alert-bg: #2E1A1A;
+    --sparkline-fill: rgba(74,166,149,0.1);
+    --row-alt: rgba(74,166,149,0.03);
+  }
+  :root[data-theme="light"] {
+    --surface: #F6F4EF;
+    --surface-card: #FFFFFF;
+    --accent: #2B7A6B;
+    --accent-wash: #E5F0ED;
+    --accent-dark: #1E5A4E;
+    --good: #3D7A4F;
+    --watch: #B07D2A;
+    --alert: #B34E4A;
+    --ink: #2A2722;
+    --ink-2: #6B6560;
+    --ink-3: #9E998F;
+    --border: #DDD9D0;
+    --border-light: #ECEAE3;
+    --tag-good-bg: #E8F5EC;
+    --tag-watch-bg: #FDF3E0;
+    --tag-alert-bg: #FCEAEA;
+    --sparkline-fill: rgba(43,122,107,0.08);
+    --row-alt: rgba(43,122,107,0.025);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  .header-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.3;
+    text-wrap: balance;
+    margin-bottom: 0.35rem;
+  }
+  .header-sub {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+  }
+  .header-dates {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .date-chip {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 3px;
+    background: var(--accent-wash);
+    color: var(--accent);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 2.5rem;
+  }
+  .section-head {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-head .icon {
+    font-size: 0.85rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-wash);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .subsection-head {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 1.5rem 0 0.65rem;
+  }
+
+  /* Kurzfazit */
+  .fazit {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+  }
+  .fazit ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .fazit li {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+    color: var(--ink);
+  }
+  .fazit li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Ampel grid */
+  .ampel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  @media (max-width: 600px) {
+    .ampel-grid { grid-template-columns: 1fr; }
+  }
+  .ampel-col {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1rem 0.75rem;
+  }
+  .ampel-col-head {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .ampel-col-head .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-green { background: var(--good); }
+  .dot-yellow { background: var(--watch); }
+  .dot-red { background: var(--alert); }
+  .ampel-col ul {
+    list-style: none;
+  }
+  .ampel-col li {
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    padding: 0.2rem 0;
+    line-height: 1.4;
+  }
+
+  /* Trend cards */
+  .trend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  @media (max-width: 600px) {
+    .trend-grid { grid-template-columns: 1fr; }
+  }
+  .trend-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  .trend-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.15rem;
+  }
+  .trend-label {
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .trend-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .trend-delta {
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .trend-delta.up { color: var(--alert); }
+  .trend-delta.down-good { color: var(--good); }
+  .trend-delta.up-good { color: var(--good); }
+  .trend-delta.stable { color: var(--ink-3); }
+  .trend-unit {
+    font-size: 0.7rem;
+    color: var(--ink-3);
+    margin-bottom: 0.5rem;
+  }
+  .trend-chart {
+    width: 100%;
+    height: 48px;
+  }
+  .trend-chart line.grid { stroke: var(--border-light); stroke-width: 1; }
+  .trend-chart line.ref { stroke: var(--watch); stroke-width: 1; stroke-dasharray: 3,3; opacity: 0.5; }
+  .trend-chart polyline.line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .trend-chart polygon.area { fill: var(--sparkline-fill); }
+  .trend-chart circle.dot { fill: var(--accent); }
+  .trend-chart circle.dot-alert { fill: var(--alert); }
+  .trend-chart text { font-size: 8px; fill: var(--ink-3); font-family: system-ui, sans-serif; }
+
+  /* Tables */
+  .data-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface-card);
+    margin-bottom: 0.75rem;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table thead th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface-card);
+    position: sticky;
+    top: 0;
+  }
+  .data-table td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+    white-space: nowrap;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:nth-child(even) { background: var(--row-alt); }
+  .data-table .marker-name {
+    font-weight: 500;
+    color: var(--ink);
+    white-space: normal;
+    min-width: 100px;
+  }
+  .data-table .val { color: var(--ink); }
+  .data-table .val-low { color: var(--watch); font-weight: 600; }
+  .data-table .val-high { color: var(--alert); font-weight: 600; }
+  .data-table .ref { color: var(--ink-3); font-size: 0.78rem; }
+  .data-table .trend-arrow { font-size: 0.9rem; }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+  }
+  .tag-good { background: var(--tag-good-bg); color: var(--good); }
+  .tag-watch { background: var(--tag-watch-bg); color: var(--watch); }
+  .tag-alert { background: var(--tag-alert-bg); color: var(--alert); }
+
+  /* Explanations */
+  .explain {
+    font-size: 0.84rem;
+    color: var(--ink-2);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+  .explain strong { color: var(--ink); font-weight: 600; }
+
+  /* Card lists */
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card-item {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+  }
+  .card-item-head {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+  .card-item p {
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+
+  /* Question list */
+  .q-list {
+    list-style: none;
+    counter-reset: q;
+  }
+  .q-list li {
+    counter-increment: q;
+    padding: 0.65rem 0 0.65rem 2.2rem;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    position: relative;
+    color: var(--ink);
+  }
+  .q-list li:last-child { border-bottom: none; }
+  .q-list li::before {
+    content: counter(q);
+    position: absolute;
+    left: 0;
+    top: 0.65rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--accent-wash);
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Scores */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.6rem;
+  }
+  .score-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 0.75rem;
+    text-align: center;
+  }
+  .score-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+  .score-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-light);
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* Positive section */
+  .positive-list {
+    list-style: none;
+  }
+  .positive-list li {
+    padding: 0.45rem 0 0.45rem 1.5rem;
+    font-size: 0.85rem;
+    color: var(--ink);
+    position: relative;
+    line-height: 1.5;
+  }
+  .positive-list li::before {
+    content: '↑';
+    position: absolute;
+    left: 0;
+    color: var(--good);
+    font-weight: 700;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    margin-top: 3rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface-card);
+  }
+  .disclaimer p {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    line-height: 1.55;
+  }
+  .disclaimer strong { color: var(--ink-2); }
+
+  /* Collapsible */
+  details { margin-bottom: 0.5rem; }
+  details summary {
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--accent);
+    font-weight: 500;
+    padding: 0.3rem 0;
+    list-style: none;
+  }
+  details summary::before {
+    content: '+ ';
+    font-weight: 400;
+  }
+  details[open] summary::before {
+    content: '- ';
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details .detail-body {
+    padding: 0.5rem 0 0.75rem;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--ink-3);
+  }
+
+  /* Print */
+  @media print {
+    body { background: white; }
+    .page { max-width: 100%; padding: 1rem; }
+    .data-table-wrap { border: 1px solid #ccc; }
+    details { open: true; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-eyebrow">Bechterew Blood Compass</div>
+    <h1>Persoenliche Blutanalyse</h1>
+    <div class="header-sub">Axiale Spondyloarthritis &middot; 4 Laborberichte &middot; 19 Monate Verlauf</div>
+    <div class="header-dates">
+      <span class="date-chip">26.03.2024</span>
+      <span class="date-chip">06.05.2024</span>
+      <span class="date-chip">01.11.2024</span>
+      <span class="date-chip">14.10.2025</span>
+    </div>
+  </header>
+
+  <!-- Kurzfazit -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">1</span> Kurzfazit</h2>
+    <div class="fazit">
+      <ul>
+        <li>Die <strong>Entzuendungsaktivitaet</strong> ist ueber den gesamten Zeitraum ueberwiegend niedrig. Das erhoehte CRP (7,9 mg/l) im Oktober 2025 wird von der Charite als Residuum eines abgeheilten Harnwegsinfekts gewertet &mdash; kein Hinweis auf einen Bechterew-Schub.</li>
+        <li>Es besteht eine <strong>leichte Anaemie</strong> (Anaemie chronischer Erkrankungen, ACD), die sich unter Adalimumab-Therapie deutlich verbessert hat: Haemoglobin von 11,7 g/dl (11/2024) auf 12,7 g/dl (10/2025).</li>
+        <li>Die <strong>Adalimumab-Therapie</strong> zeigt klinisch sehr gutes Ansprechen: BASDAI von 0,6 auf 0,0, Beschwerdefreiheit, keine Floriditat im MRT 10/2025.</li>
+        <li>Die <strong>Leber- und Nierenfunktion</strong> ist durchgehend unauffaellig &mdash; keine Hinweise auf medikamentoese Organbelastung.</li>
+        <li><strong>Beta-Globulin</strong> ist wiederholt leicht erhoeht (13,5% und 14,7%) &mdash; ein Muster, das beobachtet werden sollte.</li>
+        <li><strong>Albumin</strong> lag im Oktober 2025 mit 54,9% knapp unter der Norm &mdash; koennte mit der veganen Ernaehrung oder der chronischen Entzuendung zusammenhaengen.</li>
+        <li>Die <strong>Schilddruesenfunktion</strong> (TSH) ist stabil im Normbereich mit leichtem Abwaertstrend.</li>
+        <li><strong>Vitamin D</strong> hat sich von 72 auf 96 nmol/l verbessert &mdash; die Supplementierung wirkt.</li>
+        <li>Alle <strong>Autoimmunmarker</strong> (CCP-AK, Rheumafaktor, ANA) sind negativ &mdash; kein Hinweis auf ueberlappende Autoimmunerkrankungen.</li>
+        <li>Die <strong>Gewichtsreduktion</strong> von 150 kg auf ca. 85 kg ist bemerkenswert und traegt wesentlich zur Gesundheitsverbesserung bei.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Ampeluebersicht -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">2</span> Ampeluebersicht</h2>
+    <div class="ampel-grid">
+      <div class="ampel-col">
+        <div class="ampel-col-head"><span class="dot dot-green"></span> Unauffaellig</div>
+        <ul>
+          <li>Leberwerte (GOT, GPT, GGT)</li>
+          <li>Nierenfunktion (eGFR 120)</li>
+          <li>Schilddruese (TSH 1,10)</li>
+          <li>Vitamin D (96 nmol/l)</li>
+          <li>Gerinnung / Quick / INR</li>
+          <li>Thrombozyten</li>
+          <li>Leukozyten</li>
+          <li>Elektrolyte (Na, K, Ca)</li>
+          <li>Autoimmunmarker negativ</li>
+          <li>Lipidprofil (03/2024)</li>
+          <li>MCV, MCH, MCHC</li>
+          <li>Calprotectin im Stuhl</li>
+          <li>Hepatitis B/C negativ</li>
+          <li>QuantiFERON-TB negativ</li>
+        </ul>
+      </div>
+      <div class="ampel-col">
+        <div class="ampel-col-head"><span class="dot dot-yellow"></span> Beobachten</div>
+        <ul>
+          <li>Haemoglobin (12,7 &mdash; verbessert)</li>
+          <li>Erythrozyten (4,0 &mdash; verbessert)</li>
+          <li>Haematokrit (0,382)</li>
+          <li>Albumin (54,9% &mdash; knapp unter Ref)</li>
+          <li>Glucose (65 mg/dl &mdash; wiederholt niedrig)</li>
+          <li>Kreatinin (0,66 &mdash; knapp unter Ref)</li>
+          <li>TSH-Trend (fallend, aber normal)</li>
+          <li>Eosinophile (0,4% &mdash; knapp unter Ref)</li>
+          <li>Urin spez. Gewicht (niedrig)</li>
+        </ul>
+      </div>
+      <div class="ampel-col">
+        <div class="ampel-col-head"><span class="dot dot-red"></span> Aerztlich besprechen</div>
+        <ul>
+          <li>Beta-Globulin (14,7% &mdash; wiederholt &uarr;)</li>
+          <li>CRP 10/2025 (7,9 &mdash; HWI-Residuum?)</li>
+          <li>Urin: Blut ++ (10/2025)</li>
+          <li>Urin: pH 8,5 (10/2025)</li>
+          <li>Persistierende milde Anaemie (ACD)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verlauf / Trends -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">3</span> Verlauf &mdash; Wichtigste Marker</h2>
+    <div class="trend-grid" id="trend-grid"></div>
+  </section>
+
+  <!-- Gesundheits-Scores -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">4</span> Gesundheits-Score</h2>
+    <p class="explain" style="margin-bottom:1rem;">Vereinfachte Einschaetzung auf Basis der aktuellsten Laborwerte (10/2025), im Vergleich zum Vorbefund (11/2024). Kein klinischer Score &mdash; dient nur der Orientierung.</p>
+    <div class="score-grid" id="score-grid"></div>
+  </section>
+
+  <!-- ENTZUENDUNG -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">5</span> Detailanalyse</h2>
+
+    <div class="subsection-head">Entzuendung</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Marker</th><th>03/2024</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Trend</th><th>Bewertung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">CRP</td>
+            <td class="val">&lt;2,5 mg/l</td>
+            <td class="val">3,03 mg/l</td>
+            <td class="val">0,9 mg/l</td>
+            <td class="val-high">7,9 mg/l</td>
+            <td class="ref">&lt;5,0</td>
+            <td class="trend-arrow">&uarr;</td>
+            <td><span class="tag tag-watch">beobachten</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">BSG</td>
+            <td>&mdash;</td>
+            <td class="val-high">32 mm</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">&lt;28</td>
+            <td>&mdash;</td>
+            <td><span class="tag tag-watch">war erhoeht</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Entzuendungsmarker</summary>
+      <div class="detail-body">
+        <p><strong>CRP (C-reaktives Protein)</strong> ist der wichtigste Labormarker fuer akute Entzuendungen. Bei Morbus Bechterew kann ein erhoehtes CRP auf Krankheitsaktivitaet hinweisen, aber auch durch Infekte verursacht werden. Das CRP war ueber den gesamten Verlauf ueberwiegend niedrig. Der Anstieg auf 7,9 mg/l im Oktober 2025 wird von der Charite als Residuum eines kuerzlich abgeheilten Harnwegsinfekts (HWI) gewertet &mdash; <strong>kein Hinweis auf einen Bechterew-Schub</strong>. Dies wird auch durch den positiven Blutbefund im Urin (++) gestuetzt.</p>
+        <p style="margin-top:0.5rem;"><strong>BSG (Blutsenkungsgeschwindigkeit)</strong> war im Mai 2024 mit 32 mm leicht erhoeht. Dieser Wert lag vor Therapiebeginn mit Adalimumab und koennte die damalige Krankheitsaktivitaet widerspiegeln. Leider wurde die BSG bei den Charite-Aufenthalten nicht bestimmt, sodass kein Verlauf verfuegbar ist.</p>
+      </div>
+    </details>
+
+    <!-- BLUTBILD -->
+    <div class="subsection-head">Blutbild</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Trend</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">Haemoglobin</td>
+            <td class="val-low">8,4 mmol/l<br><small>(~13,5 g/dl)</small></td>
+            <td class="val-low">11,7 g/dl</td>
+            <td class="val-low">12,7 g/dl</td>
+            <td class="ref">13,5&ndash;17,0 g/dl</td>
+            <td class="trend-arrow" style="color:var(--good);">&uarr;</td>
+            <td><span class="tag tag-watch">verbessert</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Erythrozyten</td>
+            <td class="val-low">4,26 T/l</td>
+            <td class="val-low">3,6 /pl</td>
+            <td class="val-low">4,0 /pl</td>
+            <td class="ref">4,3&ndash;5,8</td>
+            <td class="trend-arrow" style="color:var(--good);">&uarr;</td>
+            <td><span class="tag tag-watch">verbessert</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Haematokrit</td>
+            <td class="val">0,40 l/l</td>
+            <td class="val-low">0,348 l/l</td>
+            <td class="val-low">0,382 l/l</td>
+            <td class="ref">0,395&ndash;0,505</td>
+            <td class="trend-arrow" style="color:var(--good);">&uarr;</td>
+            <td><span class="tag tag-watch">verbessert</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Leukozyten</td>
+            <td class="val">6,3 G/l</td>
+            <td class="val">6,35 /nl</td>
+            <td class="val">5,36 /nl</td>
+            <td class="ref">3,9&ndash;10,5</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Thrombozyten</td>
+            <td class="val">296 G/l</td>
+            <td class="val">258 /nl</td>
+            <td class="val">276 /nl</td>
+            <td class="ref">150&ndash;370</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">MCV</td>
+            <td class="val">94,2 fl</td>
+            <td class="val">95,6 fl</td>
+            <td class="val">94,6 fl</td>
+            <td class="ref">80&ndash;99</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">MCH</td>
+            <td class="val">1,99 fmol</td>
+            <td class="val">32,1 pg</td>
+            <td class="val">31,4 pg</td>
+            <td class="ref">27,0&ndash;33,5 pg</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">MCHC</td>
+            <td class="val">21,1 mmol/l</td>
+            <td class="val">33,6 g/dl</td>
+            <td class="val">33,2 g/dl</td>
+            <td class="ref">31,5&ndash;36,0 g/dl</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">RDW</td>
+            <td class="val">13,2%</td>
+            <td class="val">12,5%</td>
+            <td class="val">11,9%</td>
+            <td class="ref">11,5&ndash;15,0%</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Retikulozyten</td>
+            <td class="val">3,8</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">1,0&ndash;15,0</td>
+            <td>&mdash;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Differentialblutbild im Detail</summary>
+      <div class="detail-body">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Marker</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="marker-name">Neutrophile %</td><td>65%</td><td>62,7%</td><td>50,8%</td><td class="ref">42&ndash;77%</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Lymphozyten %</td><td>25%</td><td>28,5%</td><td>39,7%</td><td class="ref">20&ndash;44%</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Monozyten %</td><td>8%</td><td>6,9%</td><td>7,5%</td><td class="ref">2,0&ndash;9,5%</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Eosinophile %</td><td>1%</td><td>0,9%</td><td class="val-low">0,4%</td><td class="ref">0,5&ndash;5,5%</td><td><span class="tag tag-watch">knapp niedrig</span></td></tr>
+              <tr><td class="marker-name">Basophile %</td><td>1%</td><td>0,8%</td><td>0,7%</td><td class="ref">0,0&ndash;1,8%</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Neutrophile abs.</td><td>4,10 G/l</td><td>3,98 /nl</td><td>2,72 /nl</td><td class="ref">1,5&ndash;7,7</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Lymphozyten abs.</td><td>1,60 G/l</td><td>1,81 /nl</td><td>2,13 /nl</td><td class="ref">1,1&ndash;4,5</td><td><span class="tag tag-good">normal</span></td></tr>
+              <tr><td class="marker-name">Monozyten abs.</td><td>0,50 G/l</td><td>0,44 /nl</td><td>0,40 /nl</td><td class="ref">0,1&ndash;0,9</td><td><span class="tag tag-good">normal</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Erlaeuterung Blutbild &amp; Anaemie</summary>
+      <div class="detail-body">
+        <p>Die drei zentralen Anaemie-Marker &mdash; <strong>Haemoglobin, Erythrozyten und Haematokrit</strong> &mdash; liegen durchgehend unter dem Normbereich. Dies wurde im November 2024 an der Charite als <strong>Anaemie chronischer Erkrankungen (ACD)</strong> diagnostiziert. Bei ACD fuehrt die chronische Entzuendung (hier die axSpA) zu einer verminderten Eisenverwertung, obwohl die Eisenspeicher (Ferritin) normal sein koennen.</p>
+        <p style="margin-top:0.5rem;">Sehr erfreulich: Alle drei Werte haben sich <strong>deutlich verbessert</strong> &mdash; vermutlich durch das Ansprechen auf Adalimumab und die damit verbundene Reduktion der systemischen Entzuendung. Die Erythrozytenindizes (MCV, MCH, MCHC) sind normal, was die normozytaere, normochrome Natur der Anaemie bestaetigt &mdash; typisch fuer ACD.</p>
+        <p style="margin-top:0.5rem;">Auffaellig: Die <strong>Eosinophilen</strong> lagen im Oktober 2025 mit 0,4% knapp unter der Norm. Ein einzelner leicht niedriger Wert ist klinisch wenig bedeutsam, koennte aber bei wiederholtem Auftreten auf eine Immunmodulation durch Adalimumab hinweisen.</p>
+      </div>
+    </details>
+
+    <!-- LEBER -->
+    <div class="subsection-head">Leber</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Trend</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">GPT / ALT</td>
+            <td class="val">~19 U/l</td>
+            <td class="val">16 U/l</td>
+            <td class="val">15 U/l</td>
+            <td class="ref">&lt;41 U/l</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">GOT / AST</td>
+            <td class="val">~26 U/l</td>
+            <td class="val">19 U/l</td>
+            <td class="val">19 U/l</td>
+            <td class="ref">&lt;50 U/l</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Gamma-GT</td>
+            <td class="val">~11 U/l</td>
+            <td class="val">12 U/l</td>
+            <td class="val">13 U/l</td>
+            <td class="ref">8&ndash;61 U/l</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Alk. Phosphatase</td>
+            <td class="val-high">~161 U/l</td>
+            <td class="val">110 U/l</td>
+            <td class="val">112 U/l</td>
+            <td class="ref">40&ndash;130 U/l</td>
+            <td style="color:var(--good);">&darr;</td>
+            <td><span class="tag tag-good">normalisiert</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Bilirubin</td>
+            <td class="val">7,0 &micro;mol/l</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">0&ndash;17,1</td>
+            <td>&mdash;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">LDH</td>
+            <td>&mdash;</td>
+            <td class="val">153 U/l</td>
+            <td class="val">187 U/l</td>
+            <td class="ref">135&ndash;250</td>
+            <td>&rarr;</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Leberwerte</summary>
+      <div class="detail-body">
+        <p>Alle Leberwerte sind durchgehend im Normbereich &mdash; ein sehr gutes Zeichen, da <strong>Adalimumab</strong> in seltenen Faellen die Leber belasten kann. Die <strong>Alkalische Phosphatase</strong> war im Mai 2024 mit ~161 U/l deutlich erhoeht. Dieser Wert kann bei Morbus Bechterew durch Knochenumbau (die AP kommt auch aus dem Knochen) erhoeht sein und hat sich inzwischen normalisiert. Die durchgehend niedrigen Gamma-GT-Werte sprechen dafuer, dass der erhoehte AP-Wert knochenbedingt war und nicht leberbedingt.</p>
+      </div>
+    </details>
+
+    <!-- NIERE -->
+    <div class="subsection-head">Niere</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>03/2024</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">Kreatinin</td>
+            <td class="val">0,70 mg/dl</td>
+            <td class="val">57 &micro;mol/l</td>
+            <td class="val">0,73 mg/dl</td>
+            <td class="val-low">0,66 mg/dl</td>
+            <td class="ref">0,70&ndash;1,20</td>
+            <td><span class="tag tag-good">unbedenklich</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">eGFR (CKD-EPI)</td>
+            <td class="val">117</td>
+            <td class="val">122</td>
+            <td class="val">115</td>
+            <td class="val">120</td>
+            <td class="ref">&gt;90 ml/min</td>
+            <td><span class="tag tag-good">exzellent</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Harnsaeure</td>
+            <td>&mdash;</td>
+            <td class="val">327 &micro;mol/l</td>
+            <td class="val">3,9 mg/dl</td>
+            <td class="val">5,2 mg/dl</td>
+            <td class="ref">3,6&ndash;8,2 mg/dl</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Harnstoff</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="val">19 mg/dl</td>
+            <td class="val">24 mg/dl</td>
+            <td class="ref">17&ndash;48</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Nierenwerte</summary>
+      <div class="detail-body">
+        <p>Die Nierenfunktion ist <strong>durchgehend exzellent</strong>. Die eGFR liegt stabil bei 115-122 ml/min. Das leicht niedrige Kreatinin (0,66 mg/dl) im Oktober 2025 ist bei schlanker, sportlicher Koerperbauweise normal und kein Grund zur Sorge &mdash; es spiegelt eher die reduzierte Muskelmasse nach der grossen Gewichtsabnahme wider.</p>
+      </div>
+    </details>
+
+    <!-- MUSKULATUR -->
+    <div class="subsection-head">Muskulatur</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">CK / Kreatinkinase</td>
+            <td class="val">~127 U/l</td>
+            <td class="val">93 U/l</td>
+            <td class="val">73 U/l</td>
+            <td class="ref">&lt;190 U/l</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Kreatinkinase</summary>
+      <div class="detail-body">
+        <p><strong>CK (Kreatinkinase)</strong> ist ein Marker fuer Muskelstoffwechsel. Bei intensivem Training kann die CK voruebergehend ansteigen. Deine Werte liegen durchgehend im Normbereich, was darauf hindeutet, dass dein Trainingspensum (Rudern, Radfahren, Joggen, Krafttraining) gut vertraeglich ist und keine uebermaessige Muskelschaedigung verursacht.</p>
+      </div>
+    </details>
+
+    <!-- STOFFWECHSEL -->
+    <div class="subsection-head">Stoffwechsel</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>03/2024</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">Calcium</td>
+            <td>&mdash;</td>
+            <td class="val">2,46 mmol/l</td>
+            <td class="val">2,22 mmol/l</td>
+            <td class="val">2,47 mmol/l</td>
+            <td class="ref">2,15&ndash;2,50</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Calcium ionisiert</td>
+            <td>&mdash;</td>
+            <td class="val">1,09 mmol/l</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">1,05&ndash;1,30</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Ferritin</td>
+            <td>&mdash;</td>
+            <td class="val">101 ng/ml</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">31&ndash;409</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Eisen</td>
+            <td class="val">55 &micro;g/dl</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="ref">33&ndash;193</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Gesamteiweiss</td>
+            <td>&mdash;</td>
+            <td class="val">70,0 g/l</td>
+            <td class="val-low">61 g/l</td>
+            <td class="val">70 g/l</td>
+            <td class="ref">64&ndash;83 g/l</td>
+            <td><span class="tag tag-good">normalisiert</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Albumin %</td>
+            <td>&mdash;</td>
+            <td class="val">58,0%</td>
+            <td class="val">60,4%</td>
+            <td class="val-low">54,9%</td>
+            <td class="ref">55,8&ndash;66,1%</td>
+            <td><span class="tag tag-watch">beobachten</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">&beta;-Globulin</td>
+            <td>&mdash;</td>
+            <td class="val-high">7,1% (Beta-2)</td>
+            <td class="val-high">13,5%</td>
+            <td class="val-high">14,7%</td>
+            <td class="ref">8,4&ndash;13,1%</td>
+            <td><span class="tag tag-alert">persistierend &uarr;</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">&gamma;-Globulin</td>
+            <td>&mdash;</td>
+            <td class="val">14,7%</td>
+            <td class="val">13,2%</td>
+            <td class="val">15,4%</td>
+            <td class="ref">11,1&ndash;18,8%</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">Glucose</td>
+            <td class="val-low">72 mg/dl</td>
+            <td>&mdash;</td>
+            <td class="val-low">63 mg/dl</td>
+            <td class="val-low">65 mg/dl</td>
+            <td class="ref">74&ndash;106</td>
+            <td><span class="tag tag-watch">wiederholt niedrig</span></td>
+          </tr>
+          <tr>
+            <td class="marker-name">25-OH-Vitamin D3</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td class="val">72,0 nmol/l</td>
+            <td class="val">96,2 nmol/l</td>
+            <td class="ref">50&ndash;150</td>
+            <td><span class="tag tag-good">gut &uarr;</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Stoffwechselmarker</summary>
+      <div class="detail-body">
+        <p><strong>Beta-Globulin:</strong> Die persistierende Erhoehung der Beta-Globuline ist das auffaelligste Muster in deinen Laborwerten. Beta-Globuline umfassen Transferrin, Komplementfaktoren und Lipoproteine. Bei Morbus Bechterew koennte dies auf eine chronische Immunaktivierung hinweisen. Da der Wert steigend ist (13,5% &rarr; 14,7%), sollte dies mit deiner Rheumatologin besprochen werden.</p>
+        <p style="margin-top:0.5rem;"><strong>Albumin:</strong> Mit 54,9% knapp unter dem Referenzbereich. Bei veganer Ernaehrung und chronischer Entzuendung (ACD) kann Albumin leicht sinken. Es handelt sich aber um einen Grenzwert &mdash; das absolute Gesamteiweiss von 70 g/l ist normal, was gegen einen relevanten Proteinmangel spricht. Die Proteinzufuhr (0,8-1,5 g/kg KG empfohlen lt. Charite-Ernaehrungsberatung) sollte gesichert sein.</p>
+        <p style="margin-top:0.5rem;"><strong>Glucose:</strong> Die Werte liegen wiederholt leicht unter dem Referenzbereich. Dies kann bei Nuechternblutentnahmen und schlanker, sportlicher Koerperbauweise voellig harmlos sein. Auch die Messmethode (NaF-Blut bei der Maerzuntersuchung) ergibt systematisch niedrigere Werte. Symptome einer Hypoglykaemie (Zittern, Schwindel, Schweissausbrueche) waeren hier relevant &mdash; falls solche nicht auftreten, ist der Wert unbedenklich.</p>
+        <p style="margin-top:0.5rem;"><strong>Vitamin D:</strong> Erfreuliche Verbesserung von 72 auf 96 nmol/l &mdash; die Supplementierung zeigt Wirkung. Der Wert liegt jetzt im mittleren Optimalbereich. Besonders bei Bechterew ist eine gute Vitamin-D-Versorgung wichtig fuer den Knochenstoffwechsel.</p>
+      </div>
+    </details>
+
+    <!-- SCHILDDRUESE -->
+    <div class="subsection-head">Schilddruese</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>03/2024</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="marker-name">TSH basal</td>
+            <td class="val">1,93</td>
+            <td class="val">1,78</td>
+            <td class="val">1,55</td>
+            <td class="val">1,10</td>
+            <td class="ref">0,27&ndash;4,20 mU/l</td>
+            <td><span class="tag tag-good">normal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung TSH</summary>
+      <div class="detail-body">
+        <p><strong>TSH</strong> ist der Leitwert der Schilddruesenfunktion. Deine Werte liegen durchgehend im Normbereich mit einem leichten Abwaertstrend (1,93 &rarr; 1,10). Ein TSH von 1,10 ist ein guter Wert und zeigt keine Schilddruesenfunktionsstoerung. Der Trend ist nicht besorgniserregend, sollte aber bei kuenftigen Kontrollen weiter beobachtet werden, insbesondere da Autoimmunerkrankungen manchmal mit Schilddruesenerkrankungen assoziiert sein koennen.</p>
+      </div>
+    </details>
+
+    <!-- IMMUNOLOGIE -->
+    <div class="subsection-head">Immunologie</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>05/2024</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="marker-name">CCP-AK/Citrullin-AK</td><td class="val">&lt;0,4 U/ml</td><td class="ref">&lt;7</td><td><span class="tag tag-good">negativ</span></td></tr>
+          <tr><td class="marker-name">Rheumafaktor IgM</td><td class="val">&lt;14 klU/l</td><td class="ref">0&ndash;14</td><td><span class="tag tag-good">negativ</span></td></tr>
+          <tr><td class="marker-name">ANA IFT</td><td class="val">&lt;1:80</td><td class="ref">&mdash;</td><td><span class="tag tag-good">negativ</span></td></tr>
+          <tr><td class="marker-name">Komplement C4</td><td class="val">0,35 g/l</td><td class="ref">0,1&ndash;0,4</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Komplement C3c</td><td class="val">1,20 g/l</td><td class="ref">0,79&ndash;1,52</td><td><span class="tag tag-good">normal</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Immunologie</summary>
+      <div class="detail-body">
+        <p>Alle Autoimmunmarker sind <strong>negativ</strong>. Das ist typisch fuer Morbus Bechterew &mdash; die Erkrankung ist HLA-B27-assoziiert, aber CCP-Antikoerper und Rheumafaktor sind charakteristischerweise negativ (im Gegensatz zur rheumatoiden Arthritis). Die negativen ANA schliessen eine begleitende systemische Autoimmunerkrankung weitgehend aus. Die Komplementwerte (C3c, C4) sind normal, was gegen eine aktive Immunkomplex-vermittelte Entzuendung spricht.</p>
+      </div>
+    </details>
+
+    <!-- LIPIDE -->
+    <div class="subsection-head">Lipidprofil (nur 03/2024)</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>03/2024</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="marker-name">Cholesterin gesamt</td><td class="val">155 mg/dl</td><td class="ref">bis 200</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">LDL-Cholesterin</td><td class="val">92 mg/dl</td><td class="ref">bis 116</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">HDL-Cholesterin</td><td class="val">57 mg/dl</td><td class="ref">ab 40</td><td><span class="tag tag-good">gut</span></td></tr>
+          <tr><td class="marker-name">Triglyceride</td><td class="val">52 mg/dl</td><td class="ref">bis 150</td><td><span class="tag tag-good">sehr gut</span></td></tr>
+          <tr><td class="marker-name">LDL/HDL-Index</td><td class="val">1,6</td><td class="ref">&lt;3 Ziel</td><td><span class="tag tag-good">sehr gut</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- URIN -->
+    <div class="subsection-head">Urinstatus</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Marker</th><th>05/2024</th><th>11/2024</th><th>10/2025</th><th>Referenz</th><th>Bewertung</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="marker-name">pH-Wert</td><td class="val">5,5</td><td class="val-high">7,5</td><td class="val-high">8,5</td><td class="ref">4,8&ndash;7,4</td><td><span class="tag tag-watch">alkalisch</span></td></tr>
+          <tr><td class="marker-name">Eiweiss/Protein</td><td>negativ</td><td>negativ</td><td>negativ</td><td class="ref">negativ</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Blut/Erythrozyten</td><td>negativ</td><td>negativ</td><td class="val-high">++</td><td class="ref">negativ</td><td><span class="tag tag-alert">erhoeht (HWI)</span></td></tr>
+          <tr><td class="marker-name">Glucose</td><td>negativ</td><td>negativ</td><td>negativ</td><td class="ref">negativ</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Leukozyten</td><td>negativ</td><td>negativ</td><td>negativ</td><td class="ref">negativ</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Nitrit</td><td>negativ</td><td>negativ</td><td>negativ</td><td class="ref">negativ</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Ketone</td><td>negativ</td><td>negativ</td><td>negativ</td><td class="ref">negativ</td><td><span class="tag tag-good">normal</span></td></tr>
+          <tr><td class="marker-name">Spez. Gewicht</td><td class="val-low">1,011</td><td class="val-low">1,009</td><td class="val-low">1,006</td><td class="ref">1,010&ndash;1,020</td><td><span class="tag tag-watch">niedrig</span></td></tr>
+          <tr><td class="marker-name">Ascorbinsaeure</td><td>2+</td><td>&mdash;</td><td>&mdash;</td><td class="ref">negativ</td><td><span class="tag tag-good">Supplement</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Erlaeuterung Urinstatus</summary>
+      <div class="detail-body">
+        <p><strong>Blut im Urin (++):</strong> Der positive Blutbefund im Oktober 2025 passt zum dokumentierten kuerzlich abgeheilten Harnwegsinfekt (HWI mit Fieber, unter Ciprofloxacin 7 Tage behandelt, komplett ausgeheilt). In Kombination mit dem erhoehten CRP (7,9) erklaert dies beide Auffaelligkeiten. Die urologische Abklaerung war laut Charite unauffaellig.</p>
+        <p style="margin-top:0.5rem;"><strong>pH-Wert:</strong> Der Urin-pH ist zunehmend alkalisch (5,5 &rarr; 7,5 &rarr; 8,5). Dies kann durch die vegane, pflanzenbasierte Ernaehrung bedingt sein &mdash; pflanzliche Kost fuehrt typischerweise zu alkalischerem Urin. Ein dauerhaft alkalischer Urin koennte theoretisch das Risiko fuer bestimmte Harnsteine (Phosphatsteine) erhoehen, waehrend das Risiko fuer Harnsaeuresteine sinkt.</p>
+        <p style="margin-top:0.5rem;"><strong>Spezifisches Gewicht:</strong> Durchgehend niedrig/normal, was auf eine gute Fluessigkeitsaufnahme hindeutet (3-4 Liter/Tag laut Angabe). Dies ist grundsaetzlich positiv.</p>
+      </div>
+    </details>
+
+    <!-- Infektionsserologie -->
+    <div class="subsection-head">Infektionsserologie &amp; Screening</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Test</th><th>Ergebnis</th><th>Kontext</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="marker-name">QuantiFERON-TB Gold</td><td class="val">negativ</td><td>Screening vor Adalimumab (TNF-Blocker)</td></tr>
+          <tr><td class="marker-name">HBs-Antigen</td><td class="val">negativ</td><td>Hepatitis-B-Screening</td></tr>
+          <tr><td class="marker-name">HBc-Antikoerper</td><td class="val">negativ</td><td>Kein Kontakt mit Hep B</td></tr>
+          <tr><td class="marker-name">Hepatitis C AK</td><td class="val">negativ</td><td>Hepatitis-C-Screening</td></tr>
+          <tr><td class="marker-name">Calprotectin (Stuhl)</td><td class="val">&lt;50 &micro;g/g</td><td>Kein Hinweis auf Darmentzuendung</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Gesamtauswertung / Muster -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">6</span> Gesamtauswertung &mdash; Muster &amp; Zusammenhaenge</h2>
+    <div class="card-list">
+      <div class="card-item">
+        <div class="card-item-head">Entzuendungsaktivitaet</div>
+        <p>Die Entzuendungsaktivitaet ist insgesamt <strong>sehr gut kontrolliert</strong>. Das CRP war ueber den gesamten Verlauf niedrig, die einmalige Erhoehung im Oktober 2025 ist infektbedingt (HWI) und kein Zeichen eines Schubs. Der BASDAI-Score hat sich von 0,6 auf 0,0 verbessert. Das MRT der Wirbelsaeule zeigt im Oktober 2025 keine Zeichen der Floriditat mehr &mdash; die entzuendlichen Veraenderungen sind regredient. Dies spricht fuer ein sehr gutes Ansprechen auf Adalimumab.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Anaemie (ACD) &mdash; positiver Verlauf</div>
+        <p>Die als ACD klassifizierte Anaemie zeigt einen <strong>erfreulichen Aufwaertstrend</strong>. Haemoglobin +1,0 g/dl, Erythrozyten +0,4, Haematokrit +0,034 zwischen 11/2024 und 10/2025. Dies korreliert zeitlich mit dem Therapiebeginn von Adalimumab und der damit verbundenen Reduktion der systemischen Entzuendung. Bei ACD verbessert sich die Anaemie typischerweise, wenn die zugrundeliegende Entzuendung kontrolliert wird.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Proteinprofil &mdash; Beta-Globulin-Erhoehung</div>
+        <p>Die <strong>persistierend erhoehten Beta-Globuline</strong> (steigend von 13,5 auf 14,7%) bei gleichzeitig leicht erniedrigtem Albumin koennten auf eine chronische Immunstimulation hindeuten. Beta-Globuline umfassen Transferrin und Komplementfaktoren &mdash; eine Erhoehung kann bei chronischen Entzuendungen, Eisenstoffwechselstoerungen oder Lebererkrankungen auftreten. Da Leberwerte und Eisenwerte normal sind, spricht dies eher fuer einen Zusammenhang mit der axSpA. Dieses Muster sollte laengerfristig verfolgt werden.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Ernaehrung &amp; Supplementierung</div>
+        <p>Die vegane, glutenarme, antientzuendliche Ernaehrung scheint insgesamt gut zu funktionieren. Vitamin D hat sich deutlich verbessert (Supplementierung wirkt). Das Lipidprofil war bereits 03/2024 exzellent. Eisen und Ferritin waren bei der letzten Bestimmung normal. Das leicht niedrige Albumin koennte auf eine suboptimale Proteinzufuhr hindeuten &mdash; die Charite empfiehlt 0,8&ndash;1,5 g/kg KG (= 68&ndash;128 g Protein taeglich). Die wiederholt niedrige Nuechternglucose ist bei sportlichem Lebensstil und schlanker Koerperbauweise haeufig und in der Regel harmlos.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Organfunktion &mdash; Medikamentensicherheit</div>
+        <p>Alle <strong>Sicherheitsparameter</strong> fuer die Adalimumab-Therapie sind unauffaellig: Leberwerte normal, Nierenfunktion exzellent, kein Hinweis auf Infektionsanfaelligkeit, Tuberkulose-Screening negativ, Hepatitis-Screening negativ. Die Therapie wird gut vertragen.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fragen fuer die Rheumatologin -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">7</span> Fragen fuer meine Rheumatologin</h2>
+    <ol class="q-list">
+      <li>Die Beta-Globuline sind jetzt zum dritten Mal erhoeht und steigend (14,7%). Sollte das weiter abgeklaert werden, zum Beispiel durch eine Immunfixation oder genauere Eiweisselektrophorese?</li>
+      <li>Mein Haemoglobin verbessert sich, liegt aber mit 12,7 g/dl noch unter der Norm. Ist es sinnvoll, beim naechsten Termin Ferritin, Transferrinsaettigung und Retikulozyten mitzubestimmen, um den Eisenstoffwechsel genauer zu beurteilen?</li>
+      <li>Das CRP war im Oktober 2025 mit 7,9 mg/l erhoeht, vermutlich durch den abgeheilten Harnwegsinfekt. Sollte eine Kontrolluntersuchung des CRP erfolgen, um sicherzugehen, dass es sich wieder normalisiert hat?</li>
+      <li>Mein Albumin lag mit 54,9% knapp unter der Norm. Koennte das mit meiner veganen Ernaehrung zusammenhaengen, und sollte ich die Proteinzufuhr erhoehen?</li>
+      <li>Der Urin-pH ist zunehmend alkalisch (zuletzt 8,5). Ist das bei veganer Ernaehrung erwartbar und unbedenklich, oder sollte das naeher untersucht werden (z.B. hinsichtlich Harnsteinrisiko)?</li>
+      <li>Es wurde im Oktober 2025 Blut im Urin (++) gefunden. Die urologische Abklaerung war unauffaellig. Sollte eine Kontrolle des Urinstatus bei der naechsten Blutentnahme erfolgen?</li>
+    </ol>
+  </section>
+
+  <!-- Was ich selbst beobachten sollte -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">8</span> Was ich selbst beobachten sollte</h2>
+    <div class="card-list">
+      <div class="card-item">
+        <div class="card-item-head">Morgensteifigkeit</div>
+        <p>Dauer der Steifigkeit nach dem Aufwachen notieren. Bei Bechterew ein wichtiger Indikator fuer Krankheitsaktivitaet. Aktuell offenbar keine relevante Morgensteifigkeit (BASDAI 0,0).</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Muedigkeit &amp; Erschoepfung</div>
+        <p>Bei bestehender Anaemie (auch wenn leicht) kann vermehrte Muedigkeit auftreten. Beobachte, ob sich die Belastbarkeit parallel zur Haemoglobin-Verbesserung ebenfalls verbessert.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Infektanfaelligkeit</div>
+        <p>Unter Adalimumab (TNF-Blocker) ist das Immunsystem leicht unterdrueckt. Auf Haeufung von Infekten, verzoegerte Heilung oder ungewoehnliche Infektionen achten. Der HWI war ein einzelnes Ereignis &mdash; bei Haeufung die Aerztin informieren.</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Proteinzufuhr</div>
+        <p>Bei veganer Ernaehrung bewusst auf ausreichende Proteinzufuhr achten: Edamame, Tofu, Tempeh, Huelsenfruechte, Proteinpulver. Die Charite empfiehlt 0,8&ndash;1,5 g/kg KG (68&ndash;128 g taeglich bei 85 kg).</p>
+      </div>
+      <div class="card-item">
+        <div class="card-item-head">Trainingsreaktion</div>
+        <p>CK-Werte normal &mdash; Training wird gut vertragen. Weiter auf Erholung achten. Rudern, Radfahren und Joggen sind ausgezeichnete Sportarten bei Bechterew.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Positives -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">9</span> Positive Entwicklungen</h2>
+    <ul class="positive-list">
+      <li><strong>BASDAI 0,0</strong> &mdash; klinische Remission unter Adalimumab, keine Krankheitsaktivitaet</li>
+      <li><strong>MRT ohne Floriditat</strong> &mdash; entzuendliche Veraenderungen vollstaendig regredient (10/2025)</li>
+      <li><strong>Haemoglobin steigt</strong> &mdash; von 11,7 auf 12,7 g/dl (+8,5%), Anaemie bessert sich</li>
+      <li><strong>Erythrozyten steigen</strong> &mdash; von 3,6 auf 4,0 (+11%), naehern sich dem Normbereich</li>
+      <li><strong>Vitamin D verbessert</strong> &mdash; von 72 auf 96 nmol/l (+33%), Supplementierung wirkt</li>
+      <li><strong>Gesamteiweiss normalisiert</strong> &mdash; von 61 auf 70 g/l, wieder im Normbereich</li>
+      <li><strong>Alkalische Phosphatase normalisiert</strong> &mdash; von ~161 auf 112 U/l</li>
+      <li><strong>Gewichtsverlust von ~65 kg</strong> &mdash; BMI von 48 auf 27 kg/m&sup2; in 1,5 Jahren</li>
+      <li><strong>Leberwerte stabil exzellent</strong> &mdash; trotz Immuntherapie keine Leberbelastung</li>
+      <li><strong>Nierenfunktion stabil exzellent</strong> &mdash; eGFR konstant 115&ndash;122</li>
+      <li><strong>Lipidprofil optimal</strong> &mdash; LDL/HDL-Index 1,6 (Zielwert &lt;3)</li>
+      <li><strong>Schmerzfrei</strong> &mdash; NRS 0, Beschwerdefreiheit unter Therapie</li>
+    </ul>
+  </section>
+
+  <!-- Zusammenfassung -->
+  <section class="section">
+    <h2 class="section-head"><span class="icon">10</span> Zusammenfassung</h2>
+    <div class="fazit">
+      <p class="explain" style="margin-bottom:0;">Deine Laborwerte zeigen insgesamt ein <strong>erfreuliches Bild</strong>. Die axiale Spondyloarthritis ist unter Adalimumab klinisch und bildgebend in Remission. Die wichtigste Auffaelligkeit &mdash; die leichte Anaemie chronischer Erkrankungen &mdash; bessert sich deutlich, was den Therapieerfolg widerspiegelt. Leber, Niere und Schilddruese arbeiten unaufaellig. Die Medikamentensicherheitsparameter sind alle im gruenen Bereich.</p>
+      <p class="explain" style="margin-top:0.75rem;margin-bottom:0;">Die wenigen beobachtenswerten Punkte (persistierend erhoehte Beta-Globuline, leicht niedriges Albumin, niedrige Glucose, Urin-pH) sind keine akuten Probleme, sondern Muster, die laengerfristig verfolgt und bei Gelegenheit mit deiner Rheumatologin besprochen werden sollten. Das erhoehte CRP im Oktober 2025 hat einen klaren infektioesen Zusammenhang (abgeheilter HWI) und kein Bezug zum Bechterew.</p>
+      <p class="explain" style="margin-top:0.75rem;margin-bottom:0;">Besonders positiv ist die Gesamtentwicklung: Die Kombination aus Adalimumab-Therapie, drastischer Gewichtsreduktion, regelmaessigem Sport und bewusster Ernaehrung hat zu einer bemerkenswerten Verbesserung der Gesundheitssituation gefuehrt.</p>
+    </div>
+  </section>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <p><strong>Hinweis:</strong> Diese Analyse ersetzt keine aerztliche Beratung, stellt keine Diagnose und gibt keine Therapieempfehlung. Alle Einschaetzungen basieren auf den vorliegenden Laborwerten und dienen ausschliesslich der persoenlichen Orientierung und Vorbereitung auf Arztgespraeche. Veraenderungen der Medikation oder Therapie sollten ausschliesslich in Absprache mit der behandelnden Rheumatologin erfolgen.</p>
+  </div>
+
+  <!-- Persoenliches Profil Fragen -->
+  <section class="section" style="margin-top:2.5rem;">
+    <h2 class="section-head"><span class="icon">?</span> Persoenliches Gesundheitsprofil &mdash; Rueckfragen</h2>
+    <p class="explain">Um kuenftige Analysen noch besser einordnen zu koennen, waeren folgende Angaben hilfreich. Du kannst sie jetzt oder spaeter beantworten:</p>
+    <div class="card-list">
+      <div class="card-item"><p>Wann war die letzte Adalimumab-Spritze relativ zur Blutentnahme im Oktober 2025?</p></div>
+      <div class="card-item"><p>Hattest du in den 48 Stunden vor der Blutentnahme intensiv trainiert?</p></div>
+      <div class="card-item"><p>Wie schaetzt du aktuell dein Stressniveau ein (1&ndash;10)?</p></div>
+      <div class="card-item"><p>Wie ist deine aktuelle Schlafqualitaet (1&ndash;10)?</p></div>
+      <div class="card-item"><p>Nimmst du weiterhin Eisen, B12, Vitamin D und Omega-3 als Supplemente?</p></div>
+      <div class="card-item"><p>Wie viel Protein nimmst du schaetzungsweise taeglich zu dir?</p></div>
+    </div>
+  </section>
+
+  <div class="footer">
+    Bechterew Blood Compass &middot; Erstellt am 05.07.2026 &middot; Daten aus 4 Laborberichten (03/2024 &ndash; 10/2025)
+  </div>
+</div>
+
+<script>
+(function() {
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
+  // Trend chart data
+  const trends = [
+    {
+      label: 'CRP',
+      unit: 'mg/l · Ref: <5,0',
+      dates: ['03/24','05/24','11/24','10/25'],
+      values: [2.5, 3.03, 0.9, 7.9],
+      refLine: 5.0,
+      currentVal: '7,9',
+      delta: '+7,0',
+      deltaClass: 'up',
+      alertIdx: [3]
+    },
+    {
+      label: 'Haemoglobin',
+      unit: 'g/dl · Ref: 13,5-17,0',
+      dates: ['05/24','11/24','10/25'],
+      values: [13.5, 11.7, 12.7],
+      refLine: 13.5,
+      currentVal: '12,7',
+      delta: '+1,0',
+      deltaClass: 'up-good',
+      alertIdx: [0,1,2]
+    },
+    {
+      label: 'Erythrozyten',
+      unit: '/pl · Ref: 4,3-5,8',
+      dates: ['05/24','11/24','10/25'],
+      values: [4.26, 3.6, 4.0],
+      refLine: 4.3,
+      currentVal: '4,0',
+      delta: '+0,4',
+      deltaClass: 'up-good',
+      alertIdx: [0,1,2]
+    },
+    {
+      label: 'TSH',
+      unit: 'mU/l · Ref: 0,27-4,20',
+      dates: ['03/24','05/24','11/24','10/25'],
+      values: [1.93, 1.78, 1.55, 1.10],
+      refLine: null,
+      currentVal: '1,10',
+      delta: '-0,83',
+      deltaClass: 'stable',
+      alertIdx: []
+    },
+    {
+      label: 'Vitamin D',
+      unit: 'nmol/l · Ref: 50-150',
+      dates: ['11/24','10/25'],
+      values: [72, 96.2],
+      refLine: null,
+      currentVal: '96,2',
+      delta: '+24,2',
+      deltaClass: 'up-good',
+      alertIdx: []
+    },
+    {
+      label: 'Beta-Globulin',
+      unit: '% · Ref: 8,4-13,1',
+      dates: ['11/24','10/25'],
+      values: [13.5, 14.7],
+      refLine: 13.1,
+      currentVal: '14,7',
+      delta: '+1,2',
+      deltaClass: 'up',
+      alertIdx: [0,1]
+    }
+  ];
+
+  const grid = document.getElementById('trend-grid');
+
+  trends.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'trend-card';
+
+    const min = Math.min(...t.values) * 0.85;
+    const max = Math.max(...t.values) * 1.15;
+    const range = max - min || 1;
+
+    const w = 220, h = 48, padX = 8, padY = 6;
+    const plotW = w - 2*padX, plotH = h - 2*padY;
+
+    const points = t.values.map((v, i) => {
+      const x = padX + (t.values.length === 1 ? plotW/2 : i / (t.values.length - 1) * plotW);
+      const y = padY + plotH - ((v - min) / range * plotH);
+      return { x, y, v, alert: t.alertIdx.includes(i) };
+    });
+
+    const lineStr = points.map(p => `${p.x},${p.y}`).join(' ');
+    const areaStr = `${points[0].x},${padY+plotH} ${lineStr} ${points[points.length-1].x},${padY+plotH}`;
+
+    let refLineHtml = '';
+    if (t.refLine !== null) {
+      const ry = padY + plotH - ((t.refLine - min) / range * plotH);
+      if (ry >= padY && ry <= padY + plotH) {
+        refLineHtml = `<line class="ref" x1="${padX}" y1="${ry}" x2="${w-padX}" y2="${ry}"/>`;
+      }
+    }
+
+    const dotsHtml = points.map(p =>
+      `<circle class="${p.alert ? 'dot-alert' : 'dot'}" cx="${p.x}" cy="${p.y}" r="3"/>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="trend-card-head">
+        <span class="trend-label">${t.label}</span>
+        <span class="trend-delta ${t.deltaClass}">${t.delta}</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:0.35rem;">
+        <span class="trend-value">${t.currentVal}</span>
+      </div>
+      <div class="trend-unit">${t.unit}</div>
+      <svg class="trend-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        ${refLineHtml}
+        <polygon class="area" points="${areaStr}"/>
+        <polyline class="line" points="${lineStr}"/>
+        ${dotsHtml}
+      </svg>
+      <div style="display:flex;justify-content:space-between;margin-top:2px;">
+        ${t.dates.map(d => `<span style="font-size:0.62rem;color:var(--ink-3);">${d}</span>`).join('')}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Score cards
+  const scores = [
+    { label: 'Entzuendung', score: 80, color: 'var(--good)', note: 'CRP einmalig erhoeht (HWI)' },
+    { label: 'Blutbild', score: 60, color: 'var(--watch)', note: 'Anaemie bessernd' },
+    { label: 'Stoffwechsel', score: 75, color: 'var(--good)', note: 'Beta-Glob. erhoeht' },
+    { label: 'Organfunktion', score: 95, color: 'var(--good)', note: 'Leber/Niere exzellent' },
+    { label: 'Immunologie', score: 90, color: 'var(--good)', note: 'Autoimmunmarker neg.' }
+  ];
+
+  const sgrid = document.getElementById('score-grid');
+  scores.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.innerHTML = `
+      <div class="score-label">${s.label}</div>
+      <div class="score-value" style="color:${s.color};">${s.score}</div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${s.score}%;background:${s.color};"></div></div>
+      <div style="font-size:0.65rem;color:var(--ink-3);margin-top:0.35rem;">${s.note}</div>
+    `;
+    sgrid.appendChild(card);
+  });
+})();
+</script>
