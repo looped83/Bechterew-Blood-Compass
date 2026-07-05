@@ -267,15 +267,19 @@ const Parser={
     for(let i=1;i<=pdf.numPages;i++){
       const pg=await pdf.getPage(i);
       const c=await pg.getTextContent();
-      let lastY=null;
-      for(const it of c.items){
-        if(lastY!==null&&Math.abs(it.transform[5]-lastY)>3)text+='\n';
-        else if(lastY!==null)text+=' ';
-        text+=it.str;lastY=it.transform[5];
+      const items=[...c.items].filter(it=>it.str.length>0).sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>3?dy:a.transform[4]-b.transform[4]});
+      let lastY=null,lastX=0;
+      for(const it of items){
+        if(lastY!==null&&Math.abs(it.transform[5]-lastY)>3){text+='\n';lastX=0}
+        else if(lastY!==null){text+=(it.transform[4]-lastX>40)?'\t':' '}
+        text+=it.str;lastY=it.transform[5];lastX=it.transform[4]+(it.width||it.str.length*6);
       }
       text+='\n\n';
     }
-    return{text,datum:this.findDate(text),quelle:this.findQuelle(text),werte:this.extractValues(text)};
+    console.log('[BBC] Extrahierter PDF-Text:\n',text);
+    const werte=this.extractValues(text);
+    console.log('[BBC] Erkannte Werte:',Object.keys(werte).length,werte);
+    return{text,datum:this.findDate(text),quelle:this.findQuelle(text),werte};
   },
   findDate(t){
     const pats=[/Befunddatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Eingangsdatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Entnahmedatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Probeneingang[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Datum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/];
@@ -287,26 +291,30 @@ const Parser={
     return m?m[0].trim().slice(0,60):'Unbekanntes Labor';
   },
   extractValues(text){
-    const res={};const lines=text.split('\n');
+    const res={};const norm=text.replace(/\t/g,' ');const lines=norm.split('\n');
     for(const[key,def]of Object.entries(PARAMS)){
       for(const pat of def.parse){
         let found=false;
+        const sp=pat.includes('.*')?pat.split('.*')[0]:pat;
         for(const line of lines){
-          if(!line.toLowerCase().includes(pat.includes('.*')?pat.split('.*')[0]:pat))continue;
-          const nums=line.match(/[\s:=]+(-?\d+[.,]?\d*)/g);
-          if(!nums)continue;
-          const firstNum=nums[0].replace(/[\s:=]+/,'').replace(',','.');
-          const val=parseFloat(firstNum);
+          const lo=line.toLowerCase();
+          if(!lo.includes(sp))continue;
+          const pi=lo.indexOf(sp)+sp.length;
+          const after=line.slice(pi);
+          const nm=after.match(/(-?\d+[.,]\d+|-?\d+)/);
+          if(!nm)continue;
+          const raw=nm[0].replace(',','.');
+          const val=parseFloat(raw);
           if(isNaN(val))continue;
           let unit='',referenz='',flag='normal';
-          const afterVal=line.slice(line.indexOf(firstNum.replace('.',',')>-1?firstNum.replace('.',','):firstNum)+firstNum.length);
-          const um=afterVal.match(/^\s*([a-zA-Zµ\/%]+(?:\/[a-zA-Z]+)*)/);
+          const aft2=after.slice(nm.index+nm[0].length);
+          const um=aft2.match(/^\s*([a-zA-Zµμ\/%°²³]+(?:\/[a-zA-Z0-9²³]+)*)/);
           if(um)unit=um[1];
-          const rm=afterVal.match(/(\d+[.,]?\d*\s*[-–]\s*\d+[.,]?\d*)/)||afterVal.match(/([<>]\s*\d+[.,]?\d*)/);
-          if(rm)referenz=rm[1].replace(',','.');
+          const rm=aft2.match(/(\d+[.,]?\d*\s*[-–]\s*\d+[.,]?\d*)/)||aft2.match(/([<>≤≥]\s*\d+[.,]?\d*)/);
+          if(rm)referenz=rm[1].replace(/,/g,'.');
           if(referenz)flag=this.determineFlag(val,referenz);
-          const fm=line.match(/[\s(](H|L|hoch|niedrig|erh[öo]ht|erniedrigt|↑|↓)[\s)]/i);
-          if(fm){const f=fm[1].toLowerCase();if(['h','hoch','erhöht','erhoeht','↑'].some(x=>f.includes(x)))flag='erhoeht';if(['l','niedrig','erniedrigt','↓'].some(x=>f.includes(x)))flag='niedrig'}
+          const fm=line.match(/(^|[\s(])(H|HH|L|LL|hoch|niedrig|erh[öo]ht|erniedrigt|pathologisch|↑|↓|\*\*?)([\s)]|$)/i);
+          if(fm){const f=fm[2].toLowerCase();if(['h','hh','hoch','erhöht','erhoeht','pathologisch','↑'].some(x=>f===x))flag='erhoeht';if(['l','ll','niedrig','erniedrigt','↓'].some(x=>f===x))flag='niedrig'}
           if(!res[key])res[key]={wert:val,einheit:unit||def.unit,referenz,flag};
           found=true;break;
         }
@@ -320,8 +328,8 @@ const Parser={
     let lo=-Infinity,hi=Infinity;
     const rm=ref.match(/(\d+\.?\d*)\s*[-–]\s*(\d+\.?\d*)/);
     if(rm){lo=parseFloat(rm[1]);hi=parseFloat(rm[2])}
-    else if(ref.startsWith('<'))hi=parseFloat(ref.slice(1));
-    else if(ref.startsWith('>'))lo=parseFloat(ref.slice(1));
+    else if(ref.startsWith('<')||ref.startsWith('≤'))hi=parseFloat(ref.replace(/^[<≤]\s*/,''));
+    else if(ref.startsWith('>')||ref.startsWith('≥'))lo=parseFloat(ref.replace(/^[>≥]\s*/,''));
     else if(ref.match(/^bis\s/i))hi=parseFloat(ref.replace(/^bis\s*/i,''));
     else if(ref.match(/^ab\s/i))lo=parseFloat(ref.replace(/^ab\s*/i,''));
     if(val<lo)return'niedrig';if(val>hi)return'erhoeht';return'normal';
