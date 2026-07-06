@@ -267,16 +267,21 @@ const Parser={
     for(let i=1;i<=pdf.numPages;i++){
       const pg=await pdf.getPage(i);
       const c=await pg.getTextContent();
-      const items=[...c.items].filter(it=>it.str.length>0).sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>3?dy:a.transform[4]-b.transform[4]});
-      let lastY=null,lastX=0;
+      // Sort: descending Y (top first), then ascending X (left first)
+      // Threshold 8 handles slight baseline variations in table rows
+      const items=[...c.items].filter(it=>it.str.trim().length>0)
+        .sort((a,b)=>Math.abs(b.transform[5]-a.transform[5])>8?b.transform[5]-a.transform[5]:a.transform[4]-b.transform[4]);
+      let lastY=null,lastX=0,lastW=0;
       for(const it of items){
-        if(lastY!==null&&Math.abs(it.transform[5]-lastY)>3){text+='\n';lastX=0}
-        else if(lastY!==null){text+=(it.transform[4]-lastX>40)?'\t':' '}
-        text+=it.str;lastY=it.transform[5];lastX=it.transform[4]+(it.width||it.str.length*6);
+        const y=it.transform[5],x=it.transform[4],w=it.width||it.str.length*6;
+        if(lastY===null){text+=it.str}
+        else if(Math.abs(y-lastY)>8){text+='\n'+it.str;lastX=0;lastW=0}
+        else{text+=(x-(lastX+lastW)>15?'  ':' ')+it.str}
+        lastY=y;lastX=x;lastW=w;
       }
       text+='\n\n';
     }
-    console.log('[BBC] Extrahierter PDF-Text:\n',text);
+    console.log('[BBC] PDF-Text:\n'+text);
     const werte=this.extractValues(text);
     console.log('[BBC] Erkannte Werte:',Object.keys(werte).length,werte);
     return{text,datum:this.findDate(text),quelle:this.findQuelle(text),werte};
@@ -291,32 +296,44 @@ const Parser={
     return m?m[0].trim().slice(0,60):'Unbekanntes Labor';
   },
   extractValues(text){
-    const res={};const norm=text.replace(/\t/g,' ');const lines=norm.split('\n');
+    const res={};
+    const lines=text.split('\n');
     for(const[key,def]of Object.entries(PARAMS)){
       for(const pat of def.parse){
         let found=false;
         const sp=pat.includes('.*')?pat.split('.*')[0]:pat;
-        for(const line of lines){
-          const lo=line.toLowerCase();
+        for(let li=0;li<lines.length;li++){
+          const lo=lines[li].toLowerCase();
           if(!lo.includes(sp))continue;
+          // Try: (1) after keyword on same line, (2) whole same line, (3) next line
           const pi=lo.indexOf(sp)+sp.length;
-          const after=line.slice(pi);
-          const nm=after.match(/(-?\d+[.,]\d+|-?\d+)/);
-          if(!nm)continue;
-          const raw=nm[0].replace(',','.');
-          const val=parseFloat(raw);
-          if(isNaN(val))continue;
-          let unit='',referenz='',flag='normal';
-          const aft2=after.slice(nm.index+nm[0].length);
-          const um=aft2.match(/^\s*([a-zA-Zµμ\/%°²³]+(?:\/[a-zA-Z0-9²³]+)*)/);
-          if(um)unit=um[1];
-          const rm=aft2.match(/(\d+[.,]?\d*\s*[-–]\s*\d+[.,]?\d*)/)||aft2.match(/([<>≤≥]\s*\d+[.,]?\d*)/);
-          if(rm)referenz=rm[1].replace(/,/g,'.');
-          if(referenz)flag=this.determineFlag(val,referenz);
-          const fm=line.match(/(^|[\s(])(H|HH|L|LL|hoch|niedrig|erh[öo]ht|erniedrigt|pathologisch|↑|↓|\*\*?)([\s)]|$)/i);
-          if(fm){const f=fm[2].toLowerCase();if(['h','hh','hoch','erhöht','erhoeht','pathologisch','↑'].some(x=>f===x))flag='erhoeht';if(['l','ll','niedrig','erniedrigt','↓'].some(x=>f===x))flag='niedrig'}
-          if(!res[key])res[key]={wert:val,einheit:unit||def.unit,referenz,flag};
-          found=true;break;
+          const searches=[
+            {src:lines[li].slice(pi),ctx:lines[li]},     // after keyword
+            {src:lines[li],ctx:lines[li]},                // whole line (value before name)
+            {src:li+1<lines.length?lines[li+1]:'',ctx:lines[li]+(li+1<lines.length?' '+lines[li+1]:'')}  // next line
+          ];
+          for(const{src,ctx}of searches){
+            if(!src)continue;
+            const nm=src.match(/(-?\d+[.,]\d+|-?\d{1,4}(?![.\d]))/);
+            if(!nm)continue;
+            const raw=nm[0].replace(',','.');
+            const val=parseFloat(raw);
+            if(isNaN(val))continue;
+            // Skip obvious dates/years
+            if(val>1900&&val<2100&&nm[0].length===4)continue;
+            let unit='',referenz='',flag='normal';
+            const aft=src.slice(nm.index+nm[0].length);
+            const um=aft.match(/^\s*([a-zA-Zµμ\/%°]+(?:\/[a-zA-Z0-9]+)*)/);
+            if(um)unit=um[1];
+            const rm=aft.match(/(\d+[.,]?\d*\s*[-–]\s*\d+[.,]?\d*)/)||aft.match(/([<>≤≥]\s*\d+[.,]?\d*)/);
+            if(rm)referenz=rm[1].replace(/,/g,'.');
+            if(referenz)flag=this.determineFlag(val,referenz);
+            const fm=ctx.match(/(^|[\s(])(H|HH|L|LL|hoch|niedrig|erh[öo]ht|erniedrigt|pathologisch|↑|↓|\*)([\s)$])/i);
+            if(fm){const f=fm[2].toLowerCase();if(['h','hh','hoch','erhöht','erhoeht','pathologisch','↑'].some(x=>f===x))flag='erhoeht';if(['l','ll','niedrig','erniedrigt','↓'].some(x=>f===x))flag='niedrig'}
+            if(!res[key])res[key]={wert:val,einheit:unit||def.unit,referenz,flag};
+            found=true;break;
+          }
+          if(found)break;
         }
         if(found)break;
       }
@@ -567,8 +584,17 @@ async function handleFiles(files){
 function showReview(result,fname){
   const ov=document.getElementById('reviewOverlay'),mo=document.getElementById('reviewModal');
   const cnt=Object.keys(result.werte).length;
-  let h='<h2>Extrahierte Laborwerte prüfen</h2><p style="font-size:0.8rem;color:var(--ink-2);margin-bottom:1rem">'+fname+' — '+cnt+' Werte erkannt</p>'
-    +'<div class="modal-meta"><div><label>Datum</label><input type="date" id="rvDatum" value="'+result.datum+'"></div><div><label>Labor / Quelle</label><input type="text" id="rvQuelle" value="'+(result.quelle||'')+'"></div></div>'
+  let h='<h2>Extrahierte Laborwerte prüfen</h2>';
+  if(cnt===0){
+    h+='<div style="background:var(--tag-watch-bg);border:1px solid var(--watch);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;">'
+      +'<strong style="color:var(--watch)">Keine Werte automatisch erkannt.</strong> Du kannst Werte manuell eintragen oder den extrahierten Text unten prüfen und mir schicken, damit ich den Parser anpassen kann.'
+      +'<details style="margin-top:0.5rem"><summary style="cursor:pointer;font-size:0.75rem;color:var(--ink-2)">Extrahierten PDF-Text anzeigen (zum Debuggen)</summary>'
+      +'<textarea readonly style="width:100%;height:180px;margin-top:0.5rem;font-size:0.7rem;font-family:monospace;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:0.5rem;resize:vertical">'+result.text.replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,4000)+'</textarea>'
+      +'</details></div>';
+  } else {
+    h+='<p style="font-size:0.8rem;color:var(--ink-2);margin-bottom:1rem">'+fname+' — '+cnt+' Werte erkannt</p>';
+  }
+  h+='<div class="modal-meta"><div><label>Datum</label><input type="date" id="rvDatum" value="'+result.datum+'"></div><div><label>Labor / Quelle</label><input type="text" id="rvQuelle" value="'+(result.quelle||'')+'"></div></div>'
     +'<div class="modal-values"><table><thead><tr><th></th><th>Parameter</th><th>Wert</th><th>Einheit</th><th>Referenz</th><th>Status</th></tr></thead><tbody>';
   const entries=Object.entries(PARAMS).sort((a,b)=>{const af=result.werte[a[0]]?0:1,bf=result.werte[b[0]]?0:1;return af-bf});
   for(const[key,def]of entries){
