@@ -51,7 +51,7 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--surface); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-  .page { max-width: 880px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
   .header { text-align: center; padding: 2.5rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
   .header-eyebrow { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
   .header h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.75rem; font-weight: 400; color: var(--ink); line-height: 1.3; text-wrap: balance; margin-bottom: 0.35rem; }
@@ -82,7 +82,7 @@
   .trend-value { font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
   .trend-delta { font-size: 0.72rem; font-weight: 600; margin-bottom: 0.5rem; }
   .trend-ref { font-size: 0.65rem; color: var(--ink-3); margin-bottom: 0.5rem; }
-  .trend-svg { width: 100%; height: 48px; display: block; }
+  .trend-svg { width: 100%; height: 48px; display: block; overflow: visible; }
   .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
   @media (max-width: 600px) { .score-grid { grid-template-columns: 1fr; } }
   .score-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; text-align: center; }
@@ -92,10 +92,12 @@
   .score-bar-fill { height: 100%; border-radius: 2px; }
   .score-note { font-size: 0.65rem; color: var(--ink-3); margin-top: 0.35rem; }
   .detail-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  .detail-table th { text-align: left; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 0.5rem 0.65rem; border-bottom: 1px solid var(--border); }
-  .detail-table td { padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+  .detail-table th { text-align: left; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 0.5rem 0.5rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .detail-table td { padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
   .detail-table tr:nth-child(even) { background: var(--row-alt); }
-  .detail-table .val { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .detail-table .val { font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
+  .detail-table .spark-cell { width: 72px; min-width: 72px; padding: 0.2rem 0.5rem; }
+  .detail-table .spark-cell svg { display: block; }
   .tag { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 0.1rem 0.4rem; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
   .tag-good { background: var(--tag-good-bg); color: var(--good); }
   .tag-watch { background: var(--tag-watch-bg); color: var(--watch); }
@@ -128,7 +130,7 @@
   .btn-danger:hover { background: var(--tag-alert-bg); }
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
   .modal-overlay[hidden] { display: none; }
-  .modal { background: var(--surface-card); border-radius: 8px; max-width: 760px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .modal { background: var(--surface-card); border-radius: 8px; max-width: 780px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
   .modal h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.1rem; font-weight: 400; margin-bottom: 1rem; }
   .modal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
   .modal-meta label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); display: block; margin-bottom: 0.25rem; }
@@ -152,6 +154,7 @@
   .theme-toggle { position: fixed; top: 1rem; right: 1rem; border: 1px solid var(--border); background: var(--surface-card); border-radius: 4px; padding: 0.3rem 0.5rem; cursor: pointer; font-size: 0.8rem; color: var(--ink-2); z-index: 100; }
   .theme-toggle:hover { background: var(--accent-wash); }
   .table-wrap { overflow-x: auto; }
+  .preview-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; padding: 0.15rem 0.45rem; border-radius: 3px; background: var(--accent-wash); color: var(--accent); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -164,183 +167,368 @@
 'use strict';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+/* ── PARAMS ── */
 const PARAMS={
-crp:{name:'CRP',cat:'entzuendung',parse:['c-reaktives protein','crp'],unit:'mg/l',sev:v=>v>10?'alert':v>5?'watch':null},
-bsg:{name:'BSG',cat:'entzuendung',parse:['blutsenkung','bsg','bks'],unit:'mm',sev:v=>v>40?'alert':v>28?'watch':null},
-haemoglobin:{name:'Hämoglobin',cat:'blutbild',parse:['hämoglobin','haemoglobin','hb ','hgb'],unit:'g/dl',sev:v=>v<10?'alert':v<13.5?'watch':null},
-haematokrit:{name:'Hämatokrit',cat:'blutbild',parse:['hämatokrit','haematokrit','hkt','hct'],unit:'l/l'},
-erythrozyten:{name:'Erythrozyten',cat:'blutbild',parse:['erythrozyten','ery ','rbc'],unit:'/pl'},
-leukozyten:{name:'Leukozyten',cat:'blutbild',parse:['leukozyten','leuko','wbc'],unit:'/nl'},
-thrombozyten:{name:'Thrombozyten',cat:'blutbild',parse:['thrombozyten','thrombo','plt'],unit:'/nl'},
-mcv:{name:'MCV',cat:'blutbild',parse:['mcv'],unit:'fl'},
-mch:{name:'MCH',cat:'blutbild',parse:['mch'],unit:'pg'},
-mchc:{name:'MCHC',cat:'blutbild',parse:['mchc'],unit:'g/dl'},
-rdw:{name:'RDW',cat:'blutbild',parse:['rdw','evb'],unit:'%'},
-neutrophile_pct:{name:'Neutrophile',cat:'blutbild',parse:['neutrophile','neut','segmentk'],unit:'%'},
-lymphozyten_pct:{name:'Lymphozyten',cat:'blutbild',parse:['lymphozyten','lympho'],unit:'%'},
-monozyten_pct:{name:'Monozyten',cat:'blutbild',parse:['monozyten','mono '],unit:'%'},
-eosinophile_pct:{name:'Eosinophile',cat:'blutbild',parse:['eosinophile','eosi','eos '],unit:'%'},
-basophile_pct:{name:'Basophile',cat:'blutbild',parse:['basophile','baso'],unit:'%'},
-got:{name:'GOT (AST)',cat:'leber',parse:['got','asat','ast '],unit:'U/l'},
-gpt:{name:'GPT (ALT)',cat:'leber',parse:['gpt','alat','alt '],unit:'U/l'},
-gamma_gt:{name:'Gamma-GT',cat:'leber',parse:['gamma-gt','ggt','γ-gt','gamma gt'],unit:'U/l'},
-alk_phosphatase:{name:'Alk. Phosphatase',cat:'leber',parse:['alkalische phosphatase','alk. phosph','alk.phosph'],unit:'U/l'},
-bilirubin:{name:'Bilirubin',cat:'leber',parse:['bilirubin','bili '],unit:'mg/dl'},
-ldh:{name:'LDH',cat:'leber',parse:['ldh','lactatdehydrogenase','laktatdehydrogenase'],unit:'U/l'},
-kreatinin:{name:'Kreatinin',cat:'niere',parse:['kreatinin','creatinin','krea '],unit:'mg/dl'},
-egfr:{name:'eGFR',cat:'niere',parse:['egfr','gfr','glomer'],unit:'ml/min'},
-harnstoff:{name:'Harnstoff',cat:'niere',parse:['harnstoff','bun','urea'],unit:'mg/dl'},
-harnsaeure:{name:'Harnsäure',cat:'niere',parse:['harnsäure','harnsaeure','urat','uric'],unit:'mg/dl'},
-ck:{name:'CK',cat:'muskel',parse:['creatinkinase','ck ','cpk'],unit:'U/l'},
-calcium:{name:'Calcium',cat:'muskel',parse:['calcium ','kalzium'],unit:'mmol/l'},
-calcium_ionisiert:{name:'Ca ionisiert',cat:'muskel',parse:['calcium ion','ca ion','ca2+'],unit:'mmol/l'},
-vitamin_d:{name:'Vitamin D',cat:'muskel',parse:['vitamin d','25-oh','25-hydroxy','vit d','vit. d'],unit:'nmol/l'},
-glucose:{name:'Glucose',cat:'stoffwechsel',parse:['glucose','glukose','blutzucker','naf-gluc'],unit:'mg/dl'},
-eisen:{name:'Eisen',cat:'stoffwechsel',parse:['eisen ','serumeisen'],unit:'ug/dl'},
-ferritin:{name:'Ferritin',cat:'stoffwechsel',parse:['ferritin'],unit:'ng/ml'},
-natrium:{name:'Natrium',cat:'stoffwechsel',parse:['natrium','sodium'],unit:'mmol/l'},
-kalium:{name:'Kalium',cat:'stoffwechsel',parse:['kalium','potassium'],unit:'mmol/l'},
-gesamtprotein:{name:'Gesamtprotein',cat:'stoffwechsel',parse:['gesamtprotein','gesamteiwei','totalprotein','gesamt-eiwei'],unit:'g/l'},
-albumin_pct:{name:'Albumin',cat:'stoffwechsel',parse:['albumin'],unit:'%'},
-beta_globulin_pct:{name:'Beta-Globulin',cat:'stoffwechsel',parse:['beta-globulin','beta globulin','β-globulin','beta2-globulin'],unit:'%'},
-gamma_globulin_pct:{name:'Gamma-Globulin',cat:'stoffwechsel',parse:['gamma-globulin','gamma globulin','γ-globulin'],unit:'%'},
-tsh:{name:'TSH',cat:'schilddruese',parse:['tsh','thyreotropin','thyreoidea'],unit:'mU/l'},
-cholesterin_gesamt:{name:'Cholesterin',cat:'lipide',parse:['cholesterin','cholesterol'],unit:'mg/dl'},
-triglyceride:{name:'Triglyceride',cat:'lipide',parse:['triglyceride','triglyzeride'],unit:'mg/dl'},
-ldl:{name:'LDL',cat:'lipide',parse:['ldl'],unit:'mg/dl'},
-hdl:{name:'HDL',cat:'lipide',parse:['hdl'],unit:'mg/dl'},
-ldl_hdl_index:{name:'LDL/HDL-Index',cat:'lipide',parse:['ldl/hdl','ldl-hdl'],unit:''},
-ccp_ak:{name:'Anti-CCP-AK',cat:'immunologie',parse:['ccp','anti-ccp','citrullin'],unit:'U/ml'},
-rheumafaktor:{name:'Rheumafaktor',cat:'immunologie',parse:['rheumafaktor','rf ','rhf'],unit:'klU/l'},
-ana:{name:'ANA',cat:'immunologie',parse:['antinukle','ana '],unit:''},
-komplement_c3c:{name:'Komplement C3c',cat:'immunologie',parse:['komplement c3','c3c'],unit:'g/l'},
-komplement_c4:{name:'Komplement C4',cat:'immunologie',parse:['komplement c4','c4 '],unit:'g/l'},
-urin_ph:{name:'Urin-pH',cat:'urin',parse:['urin.*ph','u-ph'],unit:''},
-urin_blut:{name:'Urin Blut',cat:'urin',parse:['urin.*blut','u-blut'],unit:''},
-urin_spez_gewicht:{name:'Spez. Gewicht',cat:'urin',parse:['spez.*gewicht','spezifisches gewicht','u-sg'],unit:'g/ml'},
-quantiferon_tb:{name:'Quantiferon-TB',cat:'infekt',parse:['quantiferon','igra','interferon.*gamma'],unit:''},
-hbs_antigen:{name:'HBs-Antigen',cat:'infekt',parse:['hbs-antigen','hbs-ag','hbsag'],unit:''},
-hbc_antikoerper:{name:'HBc-Antikörper',cat:'infekt',parse:['hbc-antik','anti-hbc'],unit:''},
-hep_c_ak:{name:'Hepatitis-C-AK',cat:'infekt',parse:['hepatitis c','hcv','anti-hcv'],unit:''},
-calprotectin_stuhl:{name:'Calprotectin',cat:'infekt',parse:['calprotectin'],unit:'ug/g'}
+crp:{name:'CRP',cat:'entzuendung',unit:'mg/l',sev:v=>v>10?'alert':v>5?'watch':null},
+bsg:{name:'BSG',cat:'entzuendung',unit:'mm/h',sev:v=>v>40?'alert':v>28?'watch':null},
+haemoglobin:{name:'Hämoglobin',cat:'blutbild',unit:'mmol/l',sev:v=>v<5.4?'alert':v<6.5?'watch':null},
+haematokrit:{name:'Hämatokrit',cat:'blutbild',unit:'l/l'},
+erythrozyten:{name:'Erythrozyten',cat:'blutbild',unit:'T/l'},
+leukozyten:{name:'Leukozyten',cat:'blutbild',unit:'G/l',sev:v=>v>11?'alert':v<4?'watch':null},
+thrombozyten:{name:'Thrombozyten',cat:'blutbild',unit:'G/l'},
+mcv:{name:'MCV',cat:'blutbild',unit:'fl'},
+mch:{name:'MCH',cat:'blutbild',unit:'pg'},
+mchc:{name:'MCHC',cat:'blutbild',unit:'mmol/l'},
+rdw:{name:'RDW',cat:'blutbild',unit:'%'},
+rdwsd:{name:'RDW-SD',cat:'blutbild',unit:'fl'},
+retikulozyten:{name:'Retikulozyten',cat:'blutbild',unit:'%'},
+rpi:{name:'RPI',cat:'blutbild',unit:''},
+neutrophile_pct:{name:'Neutrophile %',cat:'differenzial',unit:'%'},
+lymphozyten_pct:{name:'Lymphozyten %',cat:'differenzial',unit:'%'},
+monozyten_pct:{name:'Monozyten %',cat:'differenzial',unit:'%'},
+eosinophile_pct:{name:'Eosinophile %',cat:'differenzial',unit:'%'},
+basophile_pct:{name:'Basophile %',cat:'differenzial',unit:'%'},
+neutrophile_abs:{name:'Neutrophile abs.',cat:'differenzial',unit:'G/l'},
+lymphozyten_abs:{name:'Lymphozyten abs.',cat:'differenzial',unit:'G/l'},
+monozyten_abs:{name:'Monozyten abs.',cat:'differenzial',unit:'G/l'},
+eosinophile_abs:{name:'Eosinophile abs.',cat:'differenzial',unit:'G/l'},
+basophile_abs:{name:'Basophile abs.',cat:'differenzial',unit:'G/l'},
+atypische_gran_pct:{name:'Atyp. Granuloz. %',cat:'differenzial',unit:'%'},
+atypische_gran_abs:{name:'Atyp. Granuloz. abs.',cat:'differenzial',unit:'G/l'},
+got:{name:'GOT (AST)',cat:'leber',unit:'µkat/l',sev:v=>v>0.85?'alert':null},
+gpt:{name:'GPT (ALT)',cat:'leber',unit:'µkat/l',sev:v=>v>0.85?'alert':null},
+gamma_gt:{name:'Gamma-GT',cat:'leber',unit:'µkat/l'},
+alk_phosphatase:{name:'Alk. Phosphatase',cat:'leber',unit:'µkat/l'},
+kreatinin:{name:'Kreatinin',cat:'niere',unit:'µmol/l'},
+egfr:{name:'eGFR',cat:'niere',unit:'ml/min',sev:v=>v<30?'alert':v<60?'watch':null},
+harnsaeure:{name:'Harnsäure',cat:'niere',unit:'µmol/l'},
+ck:{name:'CK',cat:'muskel',unit:'µkat/l'},
+calcium:{name:'Calcium',cat:'muskel',unit:'mmol/l'},
+calcium_ionisiert:{name:'Ca ionisiert',cat:'muskel',unit:'mmol/l'},
+ferritin:{name:'Ferritin',cat:'stoffwechsel',unit:'µg/l'},
+gesamtprotein:{name:'Gesamtprotein',cat:'elektrophorese',unit:'g/l'},
+albumin_el_pct:{name:'Albumin %',cat:'elektrophorese',unit:'%'},
+albumin_el_gl:{name:'Albumin g/l',cat:'elektrophorese',unit:'g/l'},
+alpha1_globulin_pct:{name:'α1-Globulin %',cat:'elektrophorese',unit:'%'},
+alpha1_globulin_gl:{name:'α1-Globulin g/l',cat:'elektrophorese',unit:'g/l'},
+alpha2_globulin_pct:{name:'α2-Globulin %',cat:'elektrophorese',unit:'%'},
+alpha2_globulin_gl:{name:'α2-Globulin g/l',cat:'elektrophorese',unit:'g/l'},
+beta1_globulin_pct:{name:'β1-Globulin %',cat:'elektrophorese',unit:'%'},
+beta1_globulin_gl:{name:'β1-Globulin g/l',cat:'elektrophorese',unit:'g/l'},
+beta2_globulin_pct:{name:'β2-Globulin %',cat:'elektrophorese',unit:'%'},
+beta2_globulin_gl:{name:'β2-Globulin g/l',cat:'elektrophorese',unit:'g/l'},
+gamma_globulin_pct:{name:'γ-Globulin %',cat:'elektrophorese',unit:'%'},
+gamma_globulin_gl:{name:'γ-Globulin g/l',cat:'elektrophorese',unit:'g/l'},
+tsh:{name:'TSH',cat:'schilddruese',unit:'mU/l'},
+ccp_ak:{name:'Anti-CCP-AK',cat:'immunologie',unit:'U/ml'},
+rheumafaktor:{name:'Rheumafaktor',cat:'immunologie',unit:'klU/l'},
+ana:{name:'ANA',cat:'immunologie',unit:''},
+komplement_c3c:{name:'Komplement C3c',cat:'immunologie',unit:'g/l'},
+komplement_c4:{name:'Komplement C4',cat:'immunologie',unit:'g/l'}
+};
+
+/* ── LAB CODE → PARAM KEY MAP (Laborbefundausdruck / Praxis Schönberger) ── */
+const CODE_MAP={
+  'CRP':'crp','BSGA':'bsg',
+  'HB':'haemoglobin','HK':'haematokrit','ERYB':'erythrozyten',
+  'MCV':'mcv','MCH':'mch','MCHC':'mchc',
+  'RDW':'rdw','RDWSD':'rdwsd','RETI':'retikulozyten','RPI':'rpi',
+  'THROM':'thrombozyten','LEUKO':'leukozyten',
+  'NEUT':'neutrophile_abs','LYMP':'lymphozyten_abs','MONO':'monozyten_abs',
+  'EOS':'eosinophile_abs','BASO':'basophile_abs',
+  'ANEU':'neutrophile_pct','ALYM':'lymphozyten_pct','AMON':'monozyten_pct',
+  'AEO':'eosinophile_pct','ABAS':'basophile_pct',
+  'GRAN':'atypische_gran_pct','GRANA':'atypische_gran_abs',
+  'GOT':'got','GPT':'gpt','GGT':'gamma_gt','AP':'alk_phosphatase',
+  'CREA':'kreatinin','CREE':'kreatinin','CKDEPI':'egfr','HS':'harnsaeure',
+  'CK':'ck','CA':'calcium','CAIONV':'calcium_ionisiert',
+  'FERR':'ferritin','TP':'gesamtprotein',
+  'ELALB':'albumin_el_pct','ELALBQ':'albumin_el_gl',
+  'ELA1':'alpha1_globulin_pct','ELA1Q':'alpha1_globulin_gl',
+  'ELA2':'alpha2_globulin_pct','ELA2Q':'alpha2_globulin_gl',
+  'B1GL':'beta1_globulin_pct','B1GLA':'beta1_globulin_gl',
+  'B2GL':'beta2_globulin_pct','B2GLA':'beta2_globulin_gl',
+  'ELG':'gamma_globulin_pct','ELGQ':'gamma_globulin_gl',
+  'TSHBR':'tsh','CITAK':'ccp_ak','RFM':'rheumafaktor',
+  'ANAG':'ana','C3C':'komplement_c3c','C4C':'komplement_c4'
 };
 
 const CATEGORIES=[
 {key:'entzuendung',name:'Entzündung',icon:'🔥'},
 {key:'blutbild',name:'Blutbild',icon:'🩸'},
+{key:'differenzial',name:'Differenzialblutbild',icon:'🔬'},
 {key:'leber',name:'Leber',icon:'🧪'},
 {key:'niere',name:'Niere',icon:'💧'},
 {key:'muskel',name:'Muskulatur & Knochen',icon:'🦴'},
 {key:'stoffwechsel',name:'Stoffwechsel',icon:'⚙️'},
+{key:'elektrophorese',name:'Eiweißelektrophorese',icon:'📊'},
 {key:'schilddruese',name:'Schilddrüse',icon:'🪵'},
-{key:'lipide',name:'Lipide',icon:'🧈'},
-{key:'immunologie',name:'Immunologie',icon:'🛡️'},
-{key:'urin',name:'Urin',icon:'🧋'},
-{key:'infekt',name:'Infektionsserologie',icon:'🧬'}
+{key:'immunologie',name:'Immunologie',icon:'🛡️'}
 ];
 
-/* ── DATA STORE (Einzel-Bericht) ── */
+/* ── KEY TREND PARAMS shown in the trend cards section ── */
+const TREND_KEYS=['crp','bsg','haemoglobin','leukozyten','thrombozyten','ferritin','egfr','kreatinin','tsh','ccp_ak'];
+
+/* ── STORE ── */
 const Store={
-  KEY:'bbc-single-v1',
-  getReport(){const r=localStorage.getItem(this.KEY);return r?JSON.parse(r):null},
-  setReport(r){localStorage.setItem(this.KEY,JSON.stringify(r))},
-  clearReport(){localStorage.removeItem(this.KEY)},
-  exportJSON(){const r=this.getReport();if(!r){toast('Kein Bericht vorhanden',true);return}const b=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='laborbericht.json';a.click();URL.revokeObjectURL(u)},
-  importJSON(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d.datum||!d.werte)throw new Error('Ungültiges Format');this.setReport(d);res(d)}catch(err){rej(err)}};r.readAsText(f)})}
+  KEY:'bbc-v2',
+  get(){const r=localStorage.getItem(this.KEY);return r?JSON.parse(r):null},
+  set(r){localStorage.setItem(this.KEY,JSON.stringify(r))},
+  clear(){localStorage.removeItem(this.KEY)},
+  merge(newMessungen,quelle){
+    const existing=this.get()||{quelle,hochgeladen:today(),messungen:[]};
+    const byDate={};
+    for(const m of existing.messungen)byDate[m.datum]={...m.werte};
+    for(const m of newMessungen){
+      // New PDF values take precedence within a date
+      byDate[m.datum]={...(byDate[m.datum]||{}),...m.werte};
+    }
+    const messungen=Object.entries(byDate)
+      .sort(([a],[b])=>a.localeCompare(b))
+      .map(([datum,werte])=>({datum,werte}));
+    return{quelle:quelle||existing.quelle,hochgeladen:today(),messungen};
+  },
+  exportJSON(){
+    const r=this.get();if(!r){toast('Kein Bericht vorhanden',true);return}
+    const b=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});
+    const u=URL.createObjectURL(b);const a=document.createElement('a');
+    a.href=u;a.download='labordaten.json';a.click();URL.revokeObjectURL(u);
+  },
+  importJSON(f){
+    return new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>{
+        try{
+          const d=JSON.parse(e.target.result);
+          // Support both old format (datum/werte) and new (messungen)
+          if(d.messungen){this.set(d);res(d)}
+          else if(d.datum&&d.werte){
+            const conv={quelle:d.quelle||'Import',hochgeladen:today(),messungen:[{datum:d.datum,werte:d.werte}]};
+            this.set(conv);res(conv);
+          }else throw new Error('Ungültiges Format');
+        }catch(err){rej(err)}
+      };
+      r.readAsText(f);
+    });
+  }
 };
+
+function today(){return new Date().toISOString().slice(0,10)}
+
+/* ── SPARKLINE ── */
+function sparkSVG(vals,latestFlag,w=72,h=28){
+  const nums=vals.filter(v=>typeof v==='number'&&!isNaN(v));
+  if(nums.length<2)return'';
+  const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||0.0001;
+  const pad=3;
+  const pts=nums.map((v,i)=>{
+    const px=pad+(i/(nums.length-1))*(w-2*pad);
+    const py=h-pad-((v-mn)/rng)*(h-2*pad);
+    return px.toFixed(1)+','+py.toFixed(1);
+  }).join(' ');
+  const lastPt=pts.split(' ').pop().split(',');
+  const color=latestFlag==='erhoeht'?'var(--alert)':latestFlag==='niedrig'?'var(--watch)':'var(--accent)';
+  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="2.5" fill="${color}"/></svg>`;
+}
+
+function sparkLargeSVG(vals,latestFlag,w=180,h=48){
+  const nums=vals.filter(v=>typeof v==='number'&&!isNaN(v));
+  if(nums.length<2)return'';
+  const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||0.0001;
+  const pad=4;
+  const color=latestFlag==='erhoeht'?'var(--alert)':latestFlag==='niedrig'?'var(--watch)':'var(--accent)';
+  const pts=nums.map((v,i)=>{
+    const px=pad+(i/(nums.length-1))*(w-2*pad);
+    const py=h-pad-((v-mn)/rng)*(h-2*pad);
+    return px.toFixed(1)+','+py.toFixed(1);
+  });
+  const lastPt=pts[pts.length-1].split(',');
+  // Build area path
+  const firstX=pts[0].split(',')[0];
+  const areaPath=`M${firstX},${h-pad} `+pts.map(p=>'L'+p).join(' ')+` L${lastPt[0]},${h-pad} Z`;
+  return`<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">`
+    +`<path d="${areaPath}" fill="var(--sparkline-fill)"/>`
+    +`<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>`
+    +`<circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="3" fill="${color}" stroke="var(--surface-card)" stroke-width="1.5"/>`
+    +'</svg>';
+}
 
 /* ── PDF PARSER ── */
 const Parser={
   async parsePDF(file){
     const ab=await file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:ab}).promise;
-    let text='';let totalItems=0;
+    let totalItems=0;
+    const pageGroups=[];
+    let allText='';
+
     for(let i=1;i<=pdf.numPages;i++){
       const pg=await pdf.getPage(i);
       const c=await pg.getTextContent();
-      const items=[...c.items].filter(it=>it.str.trim().length>0)
-        .sort((a,b)=>Math.abs(b.transform[5]-a.transform[5])>8?b.transform[5]-a.transform[5]:a.transform[4]-b.transform[4]);
-      totalItems+=items.length;
+      const raw=c.items.filter(it=>it.str.trim().length>0);
+      totalItems+=raw.length;
+      const items=raw.map(it=>({
+        str:it.str.trim(),
+        x:Math.round(it.transform[4]),
+        y:Math.round(it.transform[5]),
+        w:it.width||it.str.length*5
+      }));
+      pageGroups.push(items);
+      // Build flat text for fallback & detection
+      const sorted=[...items].sort((a,b)=>Math.abs(b.y-a.y)>8?b.y-a.y:a.x-b.x);
       let lastY=null,lastX=0,lastW=0;
-      for(const it of items){
-        const y=it.transform[5],x=it.transform[4],w=it.width||it.str.length*6;
-        if(lastY===null){text+=it.str}
-        else if(Math.abs(y-lastY)>8){text+='\n'+it.str;lastX=0;lastW=0}
-        else{text+=(x-(lastX+lastW)>15?'  ':' ')+it.str}
-        lastY=y;lastX=x;lastW=w;
+      for(const it of sorted){
+        if(lastY===null)allText+=it.str;
+        else if(Math.abs(it.y-lastY)>8){allText+='\n'+it.str;lastX=0;lastW=0}
+        else allText+=(it.x-(lastX+lastW)>15?'  ':' ')+it.str;
+        lastY=it.y;lastX=it.x;lastW=it.w;
       }
-      text+='\n\n';
+      allText+='\n\n';
     }
+
     const isImagePDF=totalItems<10;
-    console.log('[BBC] Seiten:',pdf.numPages,'TextItems:',totalItems,'Bildbasiert:',isImagePDF);
-    console.log('[BBC] PDF-Text:\n'+text);
-    const werte=isImagePDF?{}:this.extractValues(text);
-    console.log('[BBC] Erkannte Werte:',Object.keys(werte).length,werte);
-    return{text,isImagePDF,datum:this.findDate(text),quelle:this.findQuelle(text),werte};
+    const isLBF=!isImagePDF&&this.detectLBF(allText);
+    console.log('[BBC] Seiten:',pdf.numPages,'Items:',totalItems,'LBF:',isLBF);
+    console.log('[BBC] Text:\n'+allText.slice(0,2000));
+
+    let messungen=null;
+    if(isLBF){
+      messungen=this.parseLBF(pageGroups);
+      console.log('[BBC] LBF Messungen:',messungen?.length,'Daten:',messungen?.map(m=>m.datum));
+    }
+
+    return{
+      text:allText,isImagePDF,isLBF,
+      datum:this.findDate(allText),
+      quelle:this.findQuelle(allText),
+      messungen
+    };
   },
+
+  detectLBF(text){
+    if(/Laborbefundausdruck/i.test(text))return true;
+    const dates=(text.match(/\b\d{2}\.\d{2}\.\d{4}\b/g)||[]);
+    return dates.length>=4;
+  },
+
+  groupByY(items,tol=5){
+    const used=new Set();
+    const rows=[];
+    const byY=[...items].sort((a,b)=>b.y-a.y);
+    for(const item of byY){
+      if(used.has(item))continue;
+      const row=[item];used.add(item);
+      for(const other of byY){
+        if(used.has(other))continue;
+        if(Math.abs(other.y-item.y)<=tol){row.push(other);used.add(other)}
+      }
+      rows.push(row.sort((a,b)=>a.x-b.x));
+    }
+    return rows;
+  },
+
+  parseDateDMY(s){
+    const m=s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if(!m)return null;
+    return m[3]+'-'+m[2]+'-'+m[1];
+  },
+
+  parseLBF(pageGroups){
+    const allByDate={};
+
+    for(const items of pageGroups){
+      if(!items.length)continue;
+      const rows=this.groupByY(items);
+
+      // Find header row: row with ≥2 date strings (DD.MM.YYYY)
+      let dateColumns=null;
+      let headerY=null;
+
+      for(const row of rows){
+        const dateCells=row.filter(it=>/^\d{2}\.\d{2}\.\d{4}$/.test(it.str));
+        if(dateCells.length>=2){
+          dateColumns=dateCells.map(it=>({
+            iso:this.parseDateDMY(it.str),
+            x:it.x+Math.round(it.w/2)
+          })).filter(d=>d.iso);
+          headerY=row[0].y;
+          break;
+        }
+      }
+      if(!dateColumns||!dateColumns.length)continue;
+      for(const dc of dateColumns)if(!allByDate[dc.iso])allByDate[dc.iso]={};
+
+      // First date column X — items to its left are code + reference
+      const firstDateX=Math.min(...dateColumns.map(d=>d.x));
+
+      // Process data rows (rows with smaller Y than header = below it visually)
+      for(const row of rows){
+        if(row[0].y>=headerY)continue; // skip header row and above
+        if(row.length<2)continue;
+
+        // First item (smallest X): should be the lab code
+        const codeItem=row[0];
+        const codeStr=codeItem.str.toUpperCase().replace(/[^A-Z0-9]/g,'');
+        const paramKey=CODE_MAP[codeStr];
+        if(!paramKey)continue;
+
+        // Reference range: items between code and first date column
+        const refItems=row.filter(it=>it!==codeItem&&it.x<firstDateX-5);
+        const refRaw=refItems.map(it=>it.str).join(' ').trim();
+        // Strip units at end to get clean ref
+        const refStr=refRaw.replace(/\s+[a-zA-Zµμ%°/]+\s*$/,'').trim();
+        // Try to extract unit from refRaw
+        const unitM=refRaw.match(/\b([µμa-zA-Z%°]+(?:\/[a-zA-Z0-9]+)*)\s*$/);
+        const unit=unitM?unitM[1]:(PARAMS[paramKey]?.unit||'');
+
+        // Data values: items to the right of the reference area
+        const dataItems=row.filter(it=>it.x>=firstDateX-20);
+
+        for(const dc of dateColumns){
+          // Find the item closest in X to this date column center
+          const candidates=dataItems.filter(it=>Math.abs(it.x-dc.x)<45);
+          if(!candidates.length)continue;
+          const valItem=candidates.sort((a,b)=>Math.abs(a.x-dc.x)-Math.abs(b.x-dc.x))[0];
+
+          const str=valItem.str;
+          // Parse numeric: handle "< 0.10", "> 2.0", "3,14", etc.
+          const nm=str.match(/(-?\d+[.,]\d+|-?\d{1,6})/);
+          if(!nm)continue;
+          const val=parseFloat(nm[0].replace(',','.'));
+          if(isNaN(val))continue;
+          // Skip if looks like a year
+          if(val>=1900&&val<=2100&&nm[0].length===4)continue;
+
+          if(!allByDate[dc.iso][paramKey]){
+            const flag=refStr?this.determineFlag(val,refStr):'normal';
+            allByDate[dc.iso][paramKey]={wert:val,einheit:unit,referenz:refStr,flag};
+          }
+        }
+      }
+    }
+
+    // Convert to array sorted by date
+    return Object.entries(allByDate)
+      .sort(([a],[b])=>a.localeCompare(b))
+      .map(([datum,werte])=>({datum,werte}));
+  },
+
   findDate(t){
-    const pats=[/Befunddatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Eingangsdatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Entnahmedatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Probeneingang[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Datum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/];
+    const pats=[/Befunddatum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/Datum[:\s]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/i,/(\d{2})\.(\d{2})\.(\d{4})/];
     for(const p of pats){const m=t.match(p);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}
-    return new Date().toISOString().slice(0,10);
+    return today();
   },
   findQuelle(t){
-    const m=t.match(/(?:Labor|Laborgemeinschaft|Charit[eé]|MVZ|Arztpraxis|Klinik|Universität)[^\n]{0,60}/i);
-    return m?m[0].trim().slice(0,60):'Unbekanntes Labor';
-  },
-  extractValues(text){
-    const res={};
-    const lines=text.split('\n');
-    for(const[key,def]of Object.entries(PARAMS)){
-      for(const pat of def.parse){
-        let found=false;
-        const sp=pat.includes('.*')?pat.split('.*')[0]:pat;
-        for(let li=0;li<lines.length;li++){
-          const lo=lines[li].toLowerCase();
-          if(!lo.includes(sp))continue;
-          // Try: (1) after keyword on same line, (2) whole same line, (3) next line
-          const pi=lo.indexOf(sp)+sp.length;
-          const searches=[
-            {src:lines[li].slice(pi),ctx:lines[li]},     // after keyword
-            {src:lines[li],ctx:lines[li]},                // whole line (value before name)
-            {src:li+1<lines.length?lines[li+1]:'',ctx:lines[li]+(li+1<lines.length?' '+lines[li+1]:'')}  // next line
-          ];
-          for(const{src,ctx}of searches){
-            if(!src)continue;
-            const nm=src.match(/(-?\d+[.,]\d+|-?\d{1,4}(?![.\d]))/);
-            if(!nm)continue;
-            const raw=nm[0].replace(',','.');
-            const val=parseFloat(raw);
-            if(isNaN(val))continue;
-            // Skip obvious dates/years
-            if(val>1900&&val<2100&&nm[0].length===4)continue;
-            let unit='',referenz='',flag='normal';
-            const aft=src.slice(nm.index+nm[0].length);
-            const um=aft.match(/^\s*([a-zA-Zµμ\/%°]+(?:\/[a-zA-Z0-9]+)*)/);
-            if(um)unit=um[1];
-            const rm=aft.match(/(\d+[.,]?\d*\s*[-–]\s*\d+[.,]?\d*)/)||aft.match(/([<>≤≥]\s*\d+[.,]?\d*)/);
-            if(rm)referenz=rm[1].replace(/,/g,'.');
-            if(referenz)flag=this.determineFlag(val,referenz);
-            const fm=ctx.match(/(^|[\s(])(H|HH|L|LL|hoch|niedrig|erh[öo]ht|erniedrigt|pathologisch|↑|↓|\*)([\s)$])/i);
-            if(fm){const f=fm[2].toLowerCase();if(['h','hh','hoch','erhöht','erhoeht','pathologisch','↑'].some(x=>f===x))flag='erhoeht';if(['l','ll','niedrig','erniedrigt','↓'].some(x=>f===x))flag='niedrig'}
-            if(!res[key])res[key]={wert:val,einheit:unit||def.unit,referenz,flag};
-            found=true;break;
-          }
-          if(found)break;
-        }
-        if(found)break;
-      }
-    }
-    return res;
+    const m=t.match(/(?:Praxis|Labor|MVZ|Charit[eé]|Klinik|Universität)[^\n]{0,60}/i);
+    return m?m[0].trim().slice(0,80):'Unbekanntes Labor';
   },
   determineFlag(val,ref){
     ref=ref.replace(',','.').trim();
     let lo=-Infinity,hi=Infinity;
     const rm=ref.match(/(\d+\.?\d*)\s*[-–]\s*(\d+\.?\d*)/);
     if(rm){lo=parseFloat(rm[1]);hi=parseFloat(rm[2])}
-    else if(ref.startsWith('<')||ref.startsWith('≤'))hi=parseFloat(ref.replace(/^[<≤]\s*/,''));
-    else if(ref.startsWith('>')||ref.startsWith('≥'))lo=parseFloat(ref.replace(/^[>≥]\s*/,''));
-    else if(ref.match(/^bis\s/i))hi=parseFloat(ref.replace(/^bis\s*/i,''));
-    else if(ref.match(/^ab\s/i))lo=parseFloat(ref.replace(/^ab\s*/i,''));
+    else if(/^[<≤]/.test(ref))hi=parseFloat(ref.replace(/^[<≤]\s*/,''));
+    else if(/^[>≥]/.test(ref))lo=parseFloat(ref.replace(/^[>≥]\s*/,''));
     if(val<lo)return'niedrig';if(val>hi)return'erhoeht';return'normal';
   }
 };
@@ -348,12 +536,30 @@ const Parser={
 /* ── ANALYZER ── */
 const Analyzer={
   analyze(report){
-    if(!report)return null;
-    return{ampel:this.computeAmpel(report),scores:this.computeScores(report),fazit:this.genFazit(report),empfehlungen:this.genEmpf(report),fragen:this.genFragen(report),positiv:this.genPositiv(report)};
+    if(!report||!report.messungen?.length)return null;
+    const latest=report.messungen[report.messungen.length-1];
+    const trends=this.computeTrends(report);
+    return{
+      ampel:this.computeAmpel(latest),
+      scores:this.computeScores(latest),
+      fazit:this.genFazit(report,latest),
+      empfehlungen:this.genEmpf(latest),
+      fragen:this.genFragen(latest),
+      positiv:this.genPositiv(latest,trends),
+      trends
+    };
   },
-  computeAmpel(r){
+  computeTrends(report){
+    const t={};
+    for(const key of Object.keys(PARAMS)){
+      const vals=report.messungen.map(m=>m.werte[key]?.wert).filter(v=>typeof v==='number'&&!isNaN(v));
+      if(vals.length>=2)t[key]=vals;
+    }
+    return t;
+  },
+  computeAmpel(latest){
     const g=[],y=[],rd=[];
-    for(const[k,v]of Object.entries(r.werte)){
+    for(const[k,v]of Object.entries(latest.werte)){
       const d=PARAMS[k];if(!d)continue;
       if(v.flag==='normal'||v.flag==='negativ'){g.push(d.name);continue}
       const s=d.sev&&typeof v.wert==='number'?d.sev(v.wert):null;
@@ -361,137 +567,212 @@ const Analyzer={
     }
     return{green:g,yellow:y,red:rd};
   },
-  computeScores(report){
-    const scores=[],w=report.werte;
+  computeScores(latest){
+    const w=latest.werte;
     const total=Object.keys(w).length,norm=Object.values(w).filter(v=>v.flag==='normal'||v.flag==='negativ').length;
     const p=total?Math.round(norm/total*100):0;
-    scores.push({label:'Normalwerte',value:p+'%',pct:p,color:p>=80?'var(--good)':p>=60?'var(--watch)':'var(--alert)',note:norm+' von '+total+' im Referenzbereich'});
+    const scores=[{label:'Normalwerte',value:p+'%',pct:p,color:p>=80?'var(--good)':p>=60?'var(--watch)':'var(--alert)',note:norm+' von '+total+' im Referenzbereich'}];
     let inf=100;
-    if(w.crp&&w.crp.flag==='erhoeht')inf-=30;if(w.bsg&&w.bsg.flag==='erhoeht')inf-=20;
+    if(w.crp?.flag==='erhoeht')inf-=30;if(w.bsg?.flag==='erhoeht')inf-=20;
     inf=Math.max(0,Math.min(100,inf));
     scores.push({label:'Entzündungskontrolle',value:inf+'%',pct:inf,color:inf>=70?'var(--good)':inf>=40?'var(--watch)':'var(--alert)',note:inf>=70?'Gut kontrolliert':'Entzündungszeichen vorhanden'});
     return scores;
   },
-  genFazit(report){
-    const items=[],w=report.werte;
+  genFazit(report,latest){
+    const items=[],w=latest.werte;
+    const dates=report.messungen;
     const total=Object.keys(w).length,norm=Object.values(w).filter(v=>v.flag==='normal'||v.flag==='negativ').length;
-    items.push(Math.round(norm/total*100)+'% der Laborwerte ('+norm+' von '+total+') liegen im Referenzbereich.');
-    if(w.crp){if(w.crp.flag==='erhoeht')items.push('CRP erhöht ('+w.crp.wert+' '+w.crp.einheit+') — möglicherweise Hinweis auf entzündliche Aktivität oder infektbedingt.');else items.push('CRP im Normbereich ('+w.crp.wert+' '+w.crp.einheit+') — kein Hinweis auf akute Entzündung.')}
-    if(w.haemoglobin&&w.haemoglobin.flag==='niedrig')items.push('Hämoglobin leicht erniedrigt ('+w.haemoglobin.wert+' '+w.haemoglobin.einheit+'). Bei chronisch-entzündlichen Erkrankungen nicht ungewöhnlich.');
-    if(w.tsh&&w.tsh.flag==='normal')items.push('Schilddrüsenfunktion (TSH) unauffällig.');
-    if(w.vitamin_d&&w.vitamin_d.flag==='normal')items.push('Vitamin-D-Spiegel im optimalen Bereich.');
+    const pct=Math.round(norm/total*100);
+    items.push(pct+'% der Laborwerte ('+norm+' von '+total+') im letzten Befund vom '+fmtDate(latest.datum)+' liegen im Referenzbereich.');
+    if(dates.length>1)items.push('Verlaufsdaten aus '+dates.length+' Messungen verfügbar ('+fmtDate(dates[0].datum)+' – '+fmtDate(dates[dates.length-1].datum)+').');
+    if(w.crp){const v=w.crp;if(v.flag==='erhoeht')items.push('CRP erhöht ('+v.wert+' '+v.einheit+') — könnte auf entzündliche Aktivität hinweisen.');else items.push('CRP im Normbereich ('+v.wert+' '+v.einheit+').')}
+    if(w.haemoglobin?.flag==='niedrig')items.push('Hämoglobin leicht erniedrigt ('+w.haemoglobin.wert+' '+w.haemoglobin.einheit+'). Bei chronisch-entzündlichen Erkrankungen nicht ungewöhnlich.');
+    if(w.egfr?.flag==='normal')items.push('Nierenfunktion (eGFR) stabil im Normbereich.');
     return items;
   },
-  genEmpf(report){
-    const items=[],w=report.werte;
-    if(w.haemoglobin&&w.haemoglobin.flag==='niedrig')items.push({title:'Hämoglobin beobachten',text:'Leicht erniedrigtes Hämoglobin. Nächste Kontrolle abwarten und mit dem Arzt besprechen.'});
-    if(w.crp&&w.crp.flag==='erhoeht')items.push({title:'CRP-Erhöhung abklären',text:'Erhöhtes CRP kann auf Infektion oder Entzündungsschub hinweisen. Mit dem Rheumatologen besprechen.'});
-    if(w.glucose&&w.glucose.flag==='niedrig')items.push({title:'Glucose beobachten',text:'Nüchternglukose leicht unter dem Referenzbereich. Häufig methodenbedingt.'});
-    if(w.vitamin_d&&typeof w.vitamin_d.wert==='number'&&w.vitamin_d.wert<50)items.push({title:'Vitamin D supplementieren',text:'Vitamin-D-Spiegel unter dem empfohlenen Bereich. Bei Morbus Bechterew besonders wichtig.'});
-    if(w.kreatinin&&w.kreatinin.flag==='niedrig')items.push({title:'Kreatinin beobachten',text:'Leicht erniedrigtes Kreatinin ist meist unbedenklich. Regelmäßige Kontrolle empfohlen.'});
-    if(w.beta_globulin_pct&&w.beta_globulin_pct.flag==='erhoeht')items.push({title:'Beta-Globulin erhöht',text:'Kann bei chronisch-entzündlichen Erkrankungen vorkommen. Verlaufskontrolle empfohlen.'});
+  genEmpf(latest){
+    const items=[],w=latest.werte;
+    if(w.haemoglobin?.flag==='niedrig')items.push({title:'Hämoglobin beobachten',text:'Leicht erniedrigtes Hämoglobin. Nächste Kontrolle abwarten und mit dem Arzt besprechen.'});
+    if(w.crp?.flag==='erhoeht')items.push({title:'CRP-Erhöhung besprechen',text:'Erhöhtes CRP kann auf Infektion oder Entzündungsschub hinweisen. Mit dem Rheumatologen besprechen.'});
+    if(w.egfr&&typeof w.egfr.wert==='number'&&w.egfr.wert<60)items.push({title:'Nierenfunktion kontrollieren',text:'eGFR unter 60 ml/min. Regelmäßige Verlaufskontrollen empfohlen. Mit dem Arzt besprechen.'});
     if(!items.length)items.push({title:'Weiter so',text:'Keine akut auffälligen Befunde. Regelmäßige Kontrollen beibehalten.'});
     return items;
   },
-  genFragen(report){
-    const items=[],w=report.werte;
-    if(w.crp&&w.crp.flag==='erhoeht')items.push('CRP-Erhöhung: Ist dies mit der Grunderkrankung vereinbar oder sollte eine Infektabklärung erfolgen?');
-    if(w.haemoglobin&&w.haemoglobin.flag==='niedrig')items.push('Hämoglobin leicht erniedrigt — ist eine weiterführende Anämie-Diagnostik sinnvoll?');
-    if(w.glucose&&w.glucose.flag==='niedrig')items.push('Nüchternglukose leicht unter dem Referenzbereich — klinisch relevant?');
-    if(w.erythrozyten&&w.erythrozyten.flag==='niedrig')items.push('Erythrozyten unterhalb der Norm — Zusammenhang mit Biologika-Therapie?');
+  genFragen(latest){
+    const items=[],w=latest.werte;
+    if(w.crp?.flag==='erhoeht')items.push('CRP-Erhöhung: Ist dies mit der Grunderkrankung vereinbar oder sollte eine Infektabklärung erfolgen?');
+    if(w.haemoglobin?.flag==='niedrig')items.push('Hämoglobin leicht erniedrigt — ist eine weiterführende Anämie-Diagnostik sinnvoll?');
+    if(w.egfr&&typeof w.egfr.wert==='number'&&w.egfr.wert<60)items.push('eGFR unter 60 — besteht eine Dosisanpassung der aktuellen Medikamente?');
     items.push('Sind die aktuellen Kontrollintervalle weiterhin angemessen?');
     return items;
   },
-  genPositiv(report){
-    const items=[],w=report.werte;
-    if(w.tsh&&w.tsh.flag==='normal')items.push('Schilddrüsenfunktion stabil im Normbereich.');
-    if(w.vitamin_d&&w.vitamin_d.flag==='normal')items.push('Vitamin-D-Versorgung gut — wichtig für die Knochengesundheit.');
-    if(w.gpt&&w.gpt.flag==='normal'&&w.got&&w.got.flag==='normal')items.push('Leberwerte unauffällig trotz Biologika-Therapie.');
-    if(w.egfr&&w.egfr.flag==='normal')items.push('Nierenfunktion (eGFR) stabil im Normbereich.');
+  genPositiv(latest,trends){
+    const items=[],w=latest.werte;
+    if(w.tsh?.flag==='normal')items.push('Schilddrüsenfunktion stabil im Normbereich.');
+    if(w.gpt?.flag==='normal'&&w.got?.flag==='normal')items.push('Leberwerte unauffällig trotz Biologika-Therapie.');
+    if(w.egfr?.flag==='normal')items.push('Nierenfunktion (eGFR) stabil im Normbereich.');
+    if(w.crp?.flag==='normal'&&w.bsg?.flag==='normal')items.push('Entzündungsparameter (CRP, BSG) im Normbereich.');
+    // Check CRP trend improving
+    if(trends.crp&&trends.crp.length>=3){
+      const last3=trends.crp.slice(-3);
+      if(last3[2]<last3[0])items.push('CRP-Verlauf zeigt tendenziell rückläufige Werte — positives Signal.');
+    }
     return items;
   }
 };
 
+function fmtDate(iso){
+  if(!iso)return'';const[y,m,d]=iso.split('-');return d+'.'+m+'.'+y;
+}
+
 /* ── UI ── */
 const UI={
   render(){
-    const report=Store.getReport(),an=report?Analyzer.analyze(report):null,app=document.getElementById('app');
+    const report=Store.get(),an=report?Analyzer.analyze(report):null,app=document.getElementById('app');
     app.innerHTML=this.renderHeader(report)+this.renderUpload(report);
-    if(!an){app.innerHTML+='<div class="empty-state"><p>Noch kein Laborbericht vorhanden. Lade dein aktuelles PDF hoch.</p></div>'}
-    else{app.innerHTML+=this.renderFazit(an)+this.renderAmpel(an)+this.renderScores(an)+this.renderTable(report)+this.renderEmpf(an)+this.renderFragen(an)+this.renderPositiv(an)+this.renderSelbst()}
+    if(!an){app.innerHTML+='<div class="empty-state"><p>Noch keine Labordaten vorhanden. Lade einen Laborbefundausdruck als PDF hoch.</p></div>'}
+    else{
+      app.innerHTML+=this.renderFazit(an)+this.renderAmpel(an)+this.renderScores(an)
+        +this.renderTrends(an,report)+this.renderTable(report,an)
+        +this.renderEmpf(an)+this.renderFragen(an)+this.renderPositiv(an)+this.renderSelbst();
+    }
     app.innerHTML+=this.renderDisclaimer();
     this.bind();
   },
+
   renderHeader(report){
-    let dateStr='';
-    if(report){const[y,m,d]=report.datum.split('-');dateStr='<div class="header-dates"><span class="date-chip">'+d+'.'+m+'.'+y+'</span></div>'}
-    return'<div class="header"><div class="header-eyebrow">Bechterew Blood Compass</div><h1>Persönliche Blutanalyse</h1><div class="header-sub">Axiale Spondyloarthritis — Adalimumab-Therapie</div>'+dateStr+'</div>';
+    let dateHtml='';
+    if(report?.messungen?.length){
+      const dates=report.messungen.map(m=>m.datum);
+      dateHtml='<div class="header-dates">'+dates.map(iso=>'<span class="date-chip">'+fmtDate(iso)+'</span>').join('')+'</div>';
+    }
+    return'<div class="header"><div class="header-eyebrow">Bechterew Blood Compass</div><h1>Persönliche Blutanalyse</h1><div class="header-sub">Axiale Spondyloarthritis — Adalimumab-Therapie</div>'+dateHtml+'</div>';
   },
+
   renderUpload(report){
-    const hasReport=!!report;
-    let h='<div class="upload-section"><div class="section-head"><span class="icon">📂</span> Laborbericht verwalten</div>'
-      +'<div class="upload-zone" id="dropZone"><div class="upload-zone-icon">📄</div><div class="upload-zone-text">'+(hasReport?'Neues PDF hochladen (ersetzt aktuellen Bericht)':'PDF-Laborbericht hier ablegen oder klicken')+'</div><div class="upload-zone-hint">PDF-Dateien mit deutschen Laborwerten</div><input type="file" class="upload-input" id="fileInput" accept=".pdf"></div>';
-    if(hasReport){
-      const[y,m,d]=report.datum.split('-');
-      h+='<div class="report-list"><div class="report-item"><div class="report-item-info"><span class="report-item-date">'+d+'.'+m+'.'+y+'</span><span class="report-item-source">'+(report.quelle||'')+'</span><span class="report-item-count">'+Object.keys(report.werte).length+' Werte</span></div><button class="report-item-del" id="btnDelete" title="Bericht entfernen">×</button></div></div>'
+    const has=!!report?.messungen?.length;
+    let h='<div class="upload-section"><div class="section-head"><span class="icon">📂</span> Labordaten verwalten</div>'
+      +'<div class="upload-zone" id="dropZone"><div class="upload-zone-icon">📄</div><div class="upload-zone-text">'+(has?'Weiteres PDF hochladen (Daten werden zusammengeführt)':'Laborbefundausdruck-PDF hier ablegen oder klicken')+'</div><div class="upload-zone-hint">Laborbefundausdrucke mit mehreren Messterminen</div><input type="file" class="upload-input" id="fileInput" accept=".pdf"></div>';
+    if(has){
+      const m=report.messungen;
+      const totalParams=new Set(m.flatMap(x=>Object.keys(x.werte)));
+      h+='<div class="report-list"><div class="report-item"><div class="report-item-info">'
+        +'<span class="report-item-date">'+fmtDate(m[0].datum)+' – '+fmtDate(m[m.length-1].datum)+'</span>'
+        +'<span class="report-item-source">'+(report.quelle||'')+'</span>'
+        +'<span class="report-item-count">'+m.length+' Messungen · '+totalParams.size+' Parameter</span>'
+        +'</div><button class="report-item-del" id="btnDelete" title="Alle Daten löschen">×</button></div></div>'
         +'<div class="data-actions"><button class="btn" id="btnExport">Export (JSON)</button><button class="btn" id="btnImport">Import</button><input type="file" id="importInput" accept=".json" style="display:none"></div>';
     }
     return h+'</div>';
   },
-  renderFazit(an){return'<div class="section"><div class="section-head"><span class="icon">📋</span> Kurzfazit</div><div class="fazit"><ul>'+an.fazit.map(f=>'<li>'+f+'</li>').join('')+'</ul></div></div>'},
+
+  renderFazit(an){
+    return'<div class="section"><div class="section-head"><span class="icon">📋</span> Kurzfazit</div><div class="fazit"><ul>'+an.fazit.map(f=>'<li>'+f+'</li>').join('')+'</ul></div></div>';
+  },
+
   renderAmpel(an){
     const{green:g,yellow:y,red:r}=an.ampel;
-    return'<div class="section"><div class="section-head"><span class="icon">🚦</span> Ampelübersicht</div><div class="ampel-grid">'
+    return'<div class="section"><div class="section-head"><span class="icon">🚦</span> Ampelübersicht (aktueller Befund)</div><div class="ampel-grid">'
       +'<div class="ampel-col"><div class="ampel-col-head"><span class="dot dot-green"></span> Im Normbereich ('+g.length+')</div><ul>'+g.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'
       +'<div class="ampel-col"><div class="ampel-col-head"><span class="dot dot-yellow"></span> Beobachten ('+y.length+')</div><ul>'+(y.length?y.map(x=>'<li>'+x+'</li>').join(''):'<li style="color:var(--ink-3)">Keine</li>')+'</ul></div>'
       +'<div class="ampel-col"><div class="ampel-col-head"><span class="dot dot-red"></span> Auffällig ('+r.length+')</div><ul>'+(r.length?r.map(x=>'<li>'+x+'</li>').join(''):'<li style="color:var(--ink-3)">Keine</li>')+'</ul></div>'
       +'</div></div>';
   },
+
   renderScores(an){
     if(!an.scores.length)return'';
     let h='<div class="section"><div class="section-head"><span class="icon">🎯</span> Gesundheitsscores</div><div class="score-grid">';
     for(const s of an.scores)h+='<div class="score-card"><div class="score-label">'+s.label+'</div><div class="score-value" style="color:'+s.color+'">'+s.value+'</div><div class="score-bar-track"><div class="score-bar-fill" style="width:'+s.pct+'%;background:'+s.color+'"></div></div><div class="score-note">'+s.note+'</div></div>';
     return h+'</div></div>';
   },
-  renderTable(report){
-    let h='<div class="section"><div class="section-head"><span class="icon">🧬</span> Detaillierte Laborwerte</div>';
+
+  renderTrends(an,report){
+    const latest=report.messungen[report.messungen.length-1];
+    const keys=TREND_KEYS.filter(k=>an.trends[k]&&latest.werte[k]);
+    if(!keys.length)return'';
+    let h='<div class="section"><div class="section-head"><span class="icon">📈</span> Verlauf Schlüsselwerte</div><div class="trend-grid">';
+    for(const k of keys){
+      const v=latest.werte[k];const def=PARAMS[k];
+      const tvals=an.trends[k];
+      const prev=tvals.length>=2?tvals[tvals.length-2]:null;
+      let delta='';
+      if(prev!=null){
+        const d=v.wert-prev;const sign=d>0?'+':'';
+        const dColor=d===0?'var(--ink-3)':v.flag==='erhoeht'?'var(--alert)':v.flag==='niedrig'?'var(--watch)':'var(--good)';
+        delta='<div class="trend-delta" style="color:'+dColor+'">'+sign+d.toFixed(2).replace('.',',')+' '+v.einheit+'</div>';
+      }
+      h+='<div class="trend-card">'
+        +'<div class="trend-card-head"><span class="trend-label">'+def.name+'</span>'
+        +'<span class="trend-value" style="color:'+(v.flag==='erhoeht'?'var(--alert)':v.flag==='niedrig'?'var(--watch)':'var(--ink)')+'">'+v.wert+'</span></div>'
+        +delta
+        +'<div class="trend-ref">Referenz: '+(v.referenz||'—')+' '+v.einheit+'</div>'
+        +sparkLargeSVG(tvals,v.flag)
+        +'</div>';
+    }
+    return h+'</div></div>';
+  },
+
+  renderTable(report,an){
+    const latest=report.messungen[report.messungen.length-1];
+    const dates=report.messungen.map(m=>m.datum);
+    const multiDate=dates.length>1;
+    let h='<div class="section"><div class="section-head"><span class="icon">🧬</span> Alle Laborwerte</div>';
+
     for(const cat of CATEGORIES){
       const pInCat=Object.entries(PARAMS).filter(([,v])=>v.cat===cat.key);
-      if(!pInCat.some(([k])=>report.werte[k]))continue;
-      h+='<div class="subsection-head">'+cat.icon+' '+cat.name+'</div><div class="table-wrap"><table class="detail-table"><thead><tr><th>Parameter</th><th>Wert</th><th>Einheit</th><th>Referenz</th><th>Status</th></tr></thead><tbody>';
+      if(!pInCat.some(([k])=>latest.werte[k]))continue;
+      h+='<div class="subsection-head">'+cat.icon+' '+cat.name+'</div><div class="table-wrap"><table class="detail-table"><thead><tr><th>Parameter</th>';
+      if(multiDate)h+='<th>Verlauf</th>';
+      h+='<th>Aktuell</th><th>Einheit</th><th>Referenz</th><th>Status</th></tr></thead><tbody>';
       for(const[key,def]of pInCat){
-        const v=report.werte[key];if(!v)continue;
+        const v=latest.werte[key];if(!v)continue;
         const f=v.flag;
-        h+='<tr><td>'+def.name+'</td><td class="val">'+(typeof v.wert==='number'?v.wert:v.wert)+'</td><td style="color:var(--ink-3)">'+v.einheit+'</td><td style="font-size:0.75rem;color:var(--ink-3)">'+v.referenz+'</td><td>'+(f==='normal'||f==='negativ'?'<span class="tag tag-good">Normal</span>':f==='erhoeht'?'<span class="tag tag-alert">Erhöht</span>':'<span class="tag tag-watch">Niedrig</span>')+'</td></tr>';
+        const tagClass=f==='normal'||f==='negativ'?'tag-good':f==='erhoeht'?'tag-alert':'tag-watch';
+        const tagLabel=f==='normal'?'Normal':f==='erhoeht'?'Erhöht':f==='niedrig'?'Niedrig':'Neg.';
+        h+='<tr><td>'+def.name+'</td>';
+        if(multiDate){
+          const tvals=an.trends[key];
+          h+='<td class="spark-cell">'+(tvals&&tvals.length>=2?sparkSVG(tvals,f):'')+'</td>';
+        }
+        h+='<td class="val">'+v.wert+'</td>'
+          +'<td style="color:var(--ink-3);font-size:0.78rem">'+v.einheit+'</td>'
+          +'<td style="font-size:0.75rem;color:var(--ink-3)">'+v.referenz+'</td>'
+          +'<td><span class="tag '+tagClass+'">'+tagLabel+'</span></td></tr>';
       }
       h+='</tbody></table></div>';
     }
     return h+'</div>';
   },
+
   renderEmpf(an){
     if(!an.empfehlungen.length)return'';
     let h='<div class="section"><div class="section-head"><span class="icon">📝</span> Empfehlungen</div><div class="rec-list">';
     for(const r of an.empfehlungen)h+='<div class="rec-card"><div class="rec-card-head">'+r.title+'</div><p>'+r.text+'</p></div>';
     return h+'</div></div>';
   },
+
   renderFragen(an){
     if(!an.fragen.length)return'';
     return'<div class="section"><div class="section-head"><span class="icon">💬</span> Fragen an den Rheumatologen</div><div class="fazit"><ul>'+an.fragen.map(f=>'<li>'+f+'</li>').join('')+'</ul></div></div>';
   },
+
   renderPositiv(an){
     if(!an.positiv.length)return'';
     return'<div class="section"><div class="section-head"><span class="icon">✅</span> Positive Entwicklungen</div><div class="fazit"><ul>'+an.positiv.map(p=>'<li>'+p+'</li>').join('')+'</ul></div></div>';
   },
+
   renderSelbst(){
     return'<div class="section"><div class="section-head"><span class="icon">🔍</span> Selbstmonitoring</div><div class="rec-list">'
       +'<div class="rec-card"><div class="rec-card-head">Regelmäßige Blutkontrollen</div><p>Alle 3–6 Monate Blutbild, CRP, Leber- und Nierenwerte kontrollieren lassen.</p></div>'
-      +'<div class="rec-card"><div class="rec-card-head">Körpersignale beachten</div><p>Ungewöhnte Müdigkeit, Infektanfälligkeit oder Blutungsneigung können auf Veränderungen hinweisen.</p></div>'
+      +'<div class="rec-card"><div class="rec-card-head">Körpersignale beachten</div><p>Ungewöhnliche Müdigkeit, Infektanfälligkeit oder Blutungsneigung können auf Veränderungen hinweisen.</p></div>'
       +'<div class="rec-card"><div class="rec-card-head">BASDAI-Tagebuch</div><p>Regelmäßige Dokumentation des BASDAI-Scores hilft, den Therapieerfolg zu objektivieren.</p></div>'
       +'</div></div>';
   },
+
   renderDisclaimer(){
     return'<div class="section"><div class="disclaimer"><strong>Wichtiger Hinweis:</strong> Diese Analyse dient ausschließlich der persönlichen Orientierung und ersetzt keine ärztliche Beratung. Alle Bewertungen basieren auf allgemeinen Referenzbereichen. Bitte besprechen Sie alle Ergebnisse mit Ihrem Rheumatologen. Änderungen an der Medikation nur in Absprache mit dem Arzt. Die PDF-Analyse erfolgt lokal in Ihrem Browser — Ihre Daten werden nicht an Server gesendet.</div></div>';
   },
+
   bind(){
     const dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput');
     if(dz&&fi){
@@ -502,7 +783,7 @@ const UI={
       fi.addEventListener('change',e=>{if(e.target.files.length)handleFiles(e.target.files)});
     }
     const bDel=document.getElementById('btnDelete');
-    if(bDel)bDel.addEventListener('click',()=>{if(confirm('Aktuellen Bericht entfernen?')){Store.clearReport();toast('Bericht entfernt');UI.render()}});
+    if(bDel)bDel.addEventListener('click',()=>{if(confirm('Alle Labordaten löschen?')){Store.clear();toast('Daten gelöscht');UI.render()}});
     const bE=document.getElementById('btnExport');if(bE)bE.addEventListener('click',()=>{Store.exportJSON();toast('Export gestartet')});
     const bI=document.getElementById('btnImport'),iI=document.getElementById('importInput');
     if(bI&&iI){bI.addEventListener('click',()=>iI.click());iI.addEventListener('change',async e=>{if(!e.target.files.length)return;try{await Store.importJSON(e.target.files[0]);toast('Import erfolgreich');UI.render()}catch(err){toast('Import fehlgeschlagen: '+err.message,true)}})}
@@ -516,61 +797,95 @@ async function handleFiles(files){
   const dz=document.getElementById('dropZone');
   dz.innerHTML='<span class="spinner"></span> Analysiere '+file.name+'...';
   try{const result=await Parser.parsePDF(file);showReview(result,file.name)}
-  catch(err){toast('Fehler: '+err.message,true)}
-  dz.innerHTML='<div class="upload-zone-icon">📄</div><div class="upload-zone-text">PDF-Laborbericht hier ablegen oder klicken</div><div class="upload-zone-hint">PDF-Dateien mit deutschen Laborwerten</div>';
+  catch(err){toast('Fehler: '+err.message,true);console.error(err)}
+  finally{dz.innerHTML='<div class="upload-zone-icon">📄</div><div class="upload-zone-text">Weiteres PDF hochladen (Daten werden zusammengeführt)</div><div class="upload-zone-hint">Laborbefundausdrucke mit mehreren Messterminen</div>'}
 }
 
 function showReview(result,fname){
   const ov=document.getElementById('reviewOverlay'),mo=document.getElementById('reviewModal');
-  const cnt=Object.keys(result.werte).length;
-  let h='<h2>Laborwerte prüfen &amp; eintragen</h2>';
-  if(result.isImagePDF){
-    h+='<div style="background:var(--tag-alert-bg);border:1px solid var(--alert);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;">'
+
+  if(result.isLBF&&result.messungen&&result.messungen.length>0){
+    // ── Laborbefundausdruck (multi-date) review ──
+    const dates=result.messungen.map(m=>m.datum);
+    const totalParams=new Set(result.messungen.flatMap(m=>Object.keys(m.werte)));
+
+    let h='<h2>Laborbefundausdruck importieren</h2>';
+    h+='<p style="font-size:0.8rem;color:var(--ink-2);margin-bottom:1rem"><strong>'+fname+'</strong> — '
+      +dates.length+' Messtermine · '+totalParams.size+' Parameter erkannt</p>';
+
+    // Date chips
+    h+='<div class="header-dates" style="justify-content:flex-start;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem">'
+      +dates.map(iso=>'<span class="date-chip">'+fmtDate(iso)+'</span>').join('')+'</div>';
+
+    // Category counts
+    h+='<div style="font-size:0.8rem;color:var(--ink-2);line-height:2;margin-bottom:1rem">';
+    for(const cat of CATEGORIES){
+      const cnt=Object.entries(PARAMS).filter(([k,v])=>v.cat===cat.key&&totalParams.has(k)).length;
+      if(cnt>0)h+='<span style="margin-right:1rem">'+cat.icon+' '+cat.name+': <strong>'+cnt+'</strong></span>';
+    }
+    h+='</div>';
+
+    // Sample values table (first 3 dates)
+    h+='<div class="modal-values"><table><thead><tr><th>Parameter</th>';
+    dates.slice(0,5).forEach(iso=>h+='<th>'+fmtDate(iso)+'</th>');
+    h+='</tr></thead><tbody>';
+    const sampleKeys=['crp','bsg','haemoglobin','leukozyten','thrombozyten','egfr','crp','ferritin','tsh','ccp_ak'];
+    const shown=sampleKeys.filter(k=>totalParams.has(k)).slice(0,12);
+    // Also show any param not in sampleKeys
+    const extra=Array.from(totalParams).filter(k=>!sampleKeys.includes(k)&&PARAMS[k]).slice(0,8);
+    for(const k of [...shown,...extra]){
+      const def=PARAMS[k];if(!def)continue;
+      h+='<tr><td>'+def.name+'</td>';
+      dates.slice(0,5).forEach(iso=>{
+        const m=result.messungen.find(x=>x.datum===iso);
+        const v=m?.werte[k];
+        h+='<td style="font-size:0.78rem;font-variant-numeric:tabular-nums">'+(v?'<span style="color:'+(v.flag==='erhoeht'?'var(--alert)':v.flag==='niedrig'?'var(--watch)':'var(--ink)')+'">'+(v.wert)+'</span>':'<span style="color:var(--ink-3)">—</span>')+'</td>';
+      });
+      h+='</tr>';
+    }
+    h+='</tbody></table></div>';
+
+    h+='<div class="modal-meta" style="margin-top:0.75rem"><div style="grid-column:1/-1"><label>Labor / Quelle</label><input type="text" id="rvQuelle" value="'+(result.quelle||'')+'"></div></div>';
+    h+='<p style="font-size:0.72rem;color:var(--ink-3);margin:0.5rem 0 1rem">Vorhandene Messungen bleiben erhalten. Neue Daten werden ergänzt bzw. vorhandene Daten aktualisiert.</p>';
+    h+='<div class="modal-footer"><button class="btn" id="rvCancel">Abbrechen</button><button class="btn btn-primary" id="rvSave">Importieren & speichern</button></div>';
+
+    mo.innerHTML=h;ov.hidden=false;
+    document.getElementById('rvCancel').addEventListener('click',()=>{ov.hidden=true});
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.hidden=true});
+    document.getElementById('rvSave').addEventListener('click',()=>{
+      const quelle=document.getElementById('rvQuelle').value;
+      const merged=Store.merge(result.messungen,quelle);
+      Store.set(merged);ov.hidden=true;
+      toast(totalParams.size+' Parameter, '+dates.length+' Termine importiert');
+      UI.render();
+    });
+
+  } else if(result.isImagePDF){
+    // ── Image-based PDF ──
+    mo.innerHTML='<h2>Bildbasierte PDF</h2>'
+      +'<div style="background:var(--tag-alert-bg);border:1px solid var(--alert);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;">'
       +'<strong style="color:var(--alert)">Gescannte (bildbasierte) PDF erkannt.</strong><br>'
-      +'Diese PDF enthält keinen maschinenlesbaren Text — sie ist ein Scan oder ein Bild. Eine automatische Texterkennung (OCR) ist im Browser nicht möglich.<br><br>'
-      +'<strong>Was tun?</strong> Bitte trage die Werte unten manuell ein, oder frage dein Labor ob du die Werte als textbasierte PDF oder direkt digital erhältst.</div>';
-  } else if(cnt===0){
-    const previewText=result.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim().slice(0,3000)||'(kein Text gefunden)';
-    h+='<div style="background:var(--tag-watch-bg);border:1px solid var(--watch);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;">'
-      +'<strong style="color:var(--watch)">Text extrahiert, aber keine bekannten Laborwerte erkannt.</strong> Das PDF-Format deines Labors ist noch nicht eingestellt. '
-      +'Klappe den Text unten auf, kopiere ihn und schicke ihn — dann passe ich den Parser an dein Labor an.<br>'
+      +'Diese PDF enthält keinen maschinenlesbaren Text. Bitte eine OCR-aktivierte Version hochladen.</div>'
+      +'<div class="modal-footer"><button class="btn btn-primary" id="rvCancel">Schließen</button></div>';
+    ov.hidden=false;
+    document.getElementById('rvCancel').addEventListener('click',()=>{ov.hidden=true});
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.hidden=true});
+
+  } else {
+    // ── Format not recognized ──
+    const previewText=result.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim().slice(0,3000)||'(kein Text)';
+    mo.innerHTML='<h2>Format nicht erkannt</h2>'
+      +'<div style="background:var(--tag-watch-bg);border:1px solid var(--watch);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;">'
+      +'Text konnte extrahiert werden, aber das Format wurde nicht als Laborbefundausdruck erkannt. '
+      +'Klappe den Text auf und sende ihn, damit der Parser angepasst werden kann.<br>'
       +'<details style="margin-top:0.6rem"><summary style="cursor:pointer;color:var(--accent);font-weight:600">Extrahierten Text anzeigen</summary>'
       +'<textarea readonly style="width:100%;height:200px;margin-top:0.5rem;font-size:0.68rem;font-family:monospace;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:0.5rem;resize:vertical;white-space:pre">'+previewText+'</textarea>'
-      +'</details></div>';
-  } else {
-    h+='<p style="font-size:0.8rem;color:var(--ink-2);margin-bottom:1rem">'+fname+' — <strong>'+cnt+' Werte erkannt</strong></p>';
+      +'</details></div>'
+      +'<div class="modal-footer"><button class="btn btn-primary" id="rvCancel">Schließen</button></div>';
+    ov.hidden=false;
+    document.getElementById('rvCancel').addEventListener('click',()=>{ov.hidden=true});
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.hidden=true});
   }
-  h+='<div class="modal-meta"><div><label>Datum</label><input type="date" id="rvDatum" value="'+result.datum+'"></div><div><label>Labor / Quelle</label><input type="text" id="rvQuelle" value="'+(result.quelle||'')+'"></div></div>'
-    +'<div class="modal-values"><table><thead><tr><th></th><th>Parameter</th><th>Wert</th><th>Einheit</th><th>Referenz</th><th>Status</th></tr></thead><tbody>';
-  const entries=Object.entries(PARAMS).sort((a,b)=>{const af=result.werte[a[0]]?0:1,bf=result.werte[b[0]]?0:1;return af-bf});
-  for(const[key,def]of entries){
-    const v=result.werte[key],ck=v?'checked':'',op=v?'':'style="opacity:0.4"';
-    h+='<tr '+op+'><td><input type="checkbox" data-key="'+key+'" '+ck+'></td><td>'+def.name+'</td>'
-      +'<td><input type="text" data-f="wert" data-k="'+key+'" value="'+(v?v.wert:'')+'" style="width:70px"></td>'
-      +'<td><input type="text" data-f="einheit" data-k="'+key+'" value="'+(v?v.einheit:def.unit)+'" style="width:60px"></td>'
-      +'<td><input type="text" data-f="referenz" data-k="'+key+'" value="'+(v?v.referenz:'')+'" style="width:80px"></td>'
-      +'<td>'+(v?'<span class="tag '+(v.flag==='normal'||v.flag==='negativ'?'tag-good':v.flag==='erhoeht'?'tag-alert':'tag-watch')+'">'+(v.flag==='normal'?'Normal':v.flag==='erhoeht'?'Erhöht':v.flag==='niedrig'?'Niedrig':'Neg.')+'</span>':'')+'</td></tr>';
-  }
-  h+='</tbody></table></div><div class="modal-footer"><button class="btn" id="rvCancel">Abbrechen</button><button class="btn btn-primary" id="rvSave">Speichern</button></div>';
-  mo.innerHTML=h;ov.hidden=false;
-  document.getElementById('rvCancel').addEventListener('click',()=>{ov.hidden=true});
-  ov.addEventListener('click',e=>{if(e.target===ov)ov.hidden=true});
-  document.getElementById('rvSave').addEventListener('click',()=>{
-    const datum=document.getElementById('rvDatum').value,quelle=document.getElementById('rvQuelle').value,werte={};
-    mo.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-      if(!cb.checked)return;const k=cb.dataset.key;
-      const wI=mo.querySelector('input[data-f="wert"][data-k="'+k+'"]');
-      const eI=mo.querySelector('input[data-f="einheit"][data-k="'+k+'"]');
-      const rI=mo.querySelector('input[data-f="referenz"][data-k="'+k+'"]');
-      const raw=wI.value.trim().replace(',','.');const num=parseFloat(raw);const wV=isNaN(num)?raw:num;
-      const ref=rI.value.trim();let flag='normal';
-      if(typeof wV==='number'&&ref)flag=Parser.determineFlag(wV,ref);
-      werte[k]={wert:wV,einheit:eI.value.trim(),referenz:ref,flag};
-    });
-    if(!Object.keys(werte).length){toast('Keine Werte ausgewählt',true);return}
-    Store.setReport({datum,quelle,werte});ov.hidden=true;
-    toast(Object.keys(werte).length+' Werte gespeichert');UI.render();
-  });
 }
 
 function toast(msg,err=false){
